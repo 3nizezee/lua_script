@@ -2093,24 +2093,9 @@ function()
             local lclosure = islclosure(func)
             local SourceScript = rawget(getfenv(func),"script")
             local CallingScript = selected.Source or nil
-            local info = {}
             
-            info = {
+            local info = {
                 info = getinfo(func),
-                constants = lclosure and deepclone(getconstants(func)) or "N/A --Lua Closure expected got C Closure",
-                upvalues = deepclone(getupvalues(func)),
-                script = {
-                    SourceScript = SourceScript or 'nil',
-                    CallingScript = CallingScript or 'nil'
-                }
-            }
-                    
-            if configs.advancedinfo then
-                local Remote = selected.Remote
-
-                            info = {
-                info = getinfo(func),
-                -- แปล: แจ้งเตือนกรณีฟังก์ชันไม่ใช่โค้ด Lua ธรรมดา แต่เป็นภาษา C (C Closure) ที่ดึงค่าคงที่ไม่ได้
                 constants = lclosure and deepclone(getconstants(func)) or "ไม่มีข้อมูล -- (ต้องการ Lua Closure แต่พบว่าเป็น C Closure)",
                 upvalues = deepclone(getupvalues(func)),
                 script = {
@@ -2129,12 +2114,10 @@ function()
                         CallingScriptDebugId = CallingScript and typeof(SourceScript) == "Instance" and OldDebugId(CallingScript) or "ไม่มีข้อมูล (N/A)",
                         RemoteDebugId = OldDebugId(Remote)
                     },
-                    -- แปล: แจ้งเตือนแบบเดียวกันกรณีเป็น C Closure
                     Protos = lclosure and getprotos(func) or "ไม่มีข้อมูล -- (ต้องการ Lua Closure แต่พบว่าเป็น C Closure)"
                 }
 
                 if Remote:IsA("RemoteFunction") then
-                    -- แปล: แจ้งเตือนกรณี Executor ขาดฟังก์ชัน getcallbackmember ทำให้ดึงข้อมูลการ Invoke กลับไม่ได้
                     info["advancedinfo"]["OnClientInvoke"] = getcallbackmember and (getcallbackmember(Remote,"OnClientInvoke") or "ไม่มีข้อมูล (N/A)") or "ไม่มีข้อมูล -- (Executor ของคุณไม่มีฟังก์ชัน getcallbackmember)"
                 elseif getconnections then
                     info["advancedinfo"]["OnClientEvents"] = {}
@@ -2152,9 +2135,9 @@ function()
             selected.Function = v2v({functionInfo = info})
         end
         codebox:setRaw("-- ข้อมูลการเรียกใช้ฟังก์ชัน\n-- สร้างแล้ว \n\n"..selected.Function)
-        TextLabel.Text = "เสร็จแล้ว! ข้อมูลฟังก์ชันถูกสร้างขึ้นแล้ว."
+        TextLabel.Text = "เสร็จแล้ว! ข้อมูลฟังก์ชันถูกสร้างขึ้นแล้ว"
     else
-        TextLabel.Text = "เกิดข้อผิดพลาด! ไม่พบฟังก์ชันที่เลือก."
+        TextLabel.Text = "เกิดข้อผิดพลาด! ไม่พบฟังก์ชันที่เลือก"
     end
 end)
 
