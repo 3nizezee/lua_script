@@ -1,9 +1,11 @@
 --!native
 --50/50 this breaks but it's a beta for a reason!
 
-if getgenv().SimpleSpyExecuted and type(getgenv().SimpleSpyShutdown) == "function" then
-    getgenv().SimpleSpyShutdown()
+if getgenv().SimpleSpyExecuted then
+    pcall(function() getgenv().SimpleSpyShutdown() end)
+    getgenv().SimpleSpyExecuted = false
 end
+
 
 local realconfigs = {
     logcheckcaller = false,
@@ -220,8 +222,16 @@ function ErrorPrompt(Message,state)
     end
 end
 
-local Highlight = (isfile and loadfile and isfile("Highlight.lua") and loadfile("Highlight.lua")()) or loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/Highlight.lua"))()
-local LazyFix = loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/Roblox/refs/heads/main/Lua/Libraries/DataToCode/DataToCode.luau"))() -- Very lazy fix as I'm legit just pasting it from the rewrite
+local Highlight = { new = function() return { setRaw = function() end, getString = function() return "" end } end }
+local LazyFix = { Convert = function(a) return tostring(a) end, ConvertKnown = function(a,b) return "game" end }
+
+pcall(function()
+    Highlight = (isfile and loadfile and isfile("Highlight.lua") and loadfile("Highlight.lua")()) or loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/Highlight.lua"))()
+end)
+pcall(function()
+    LazyFix = loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/Roblox/refs/heads/main/Lua/Libraries/DataToCode/DataToCode.luau"))()
+end)
+  
 
 local SimpleSpy3 = Create("ScreenGui",{ResetOnSpawn = false})
 local Storage = Create("Folder",{})
@@ -490,7 +500,7 @@ end
 --- Drags gui (so long as mouse is held down)
 --- @param input InputObject
 function onBarInput(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         local lastPos = UserInputService:GetMouseLocation()
         local mainPos = Background.AbsolutePosition
         local offset = mainPos - lastPos
@@ -796,7 +806,7 @@ end
 function backgroundUserInput(input)
     local mousePos = UserInputService:GetMouseLocation() - GuiInset
     local inResizeRange, type = isInResizeRange(mousePos)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 and inResizeRange then
+    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and inResizeRange then
         local lastPos = UserInputService:GetMouseLocation()
         local offset = Background.AbsoluteSize - lastPos
         local currentPos = lastPos + offset
