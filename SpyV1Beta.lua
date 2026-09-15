@@ -1932,11 +1932,9 @@ if not getgenv().SimpleSpyExecuted then
         if not hookmetamethod then
             ErrorPrompt("Simple Spy V3 will not function to it's fullest capablity due to your executor not supporting hookmetamethod.",true)
         end
-        codebox = Highlight.new(CodeBox)
-        logthread(spawn(function()
-            local suc,err = pcall(game.HttpGet,game,"https://raw.githubusercontent.com/78n/SimpleSpy/main/UpdateLog.lua")
-            codebox:setRaw((suc and err) or "")
-        end))
+                codebox = Highlight.new(CodeBox)
+        -- ตั้งค่าให้กล่องโค้ดว่างเปล่าทันทีเมื่อรันสคริปต์
+        codebox:setRaw("")
         getgenv().SimpleSpy = SimpleSpy
         getgenv().getNil = function(name,class)
             for _,v in next, getnilinstances() do
