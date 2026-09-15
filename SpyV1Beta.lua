@@ -520,7 +520,8 @@ end
 --- Drags gui (so long as mouse is held down)
 --- @param input InputObject
 function onBarInput(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    -- แก้ไขบรรทัดนี้: เพิ่มการรองรับการ Touch (แตะหน้าจอ)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         local lastPos = UserInputService:GetMouseLocation()
         local mainPos = Background.AbsolutePosition
         local offset = mainPos - lastPos
@@ -550,6 +551,19 @@ function onBarInput(input)
                     lastPos = newPos
                     TweenService.Create(TweenService, Background, TweenInfo.new(0.1), {Position = UDim2.new(0, currentPos.X, 0, currentPos.Y)}):Play()
                 end
+            end)
+        end
+        table.insert(connections, UserInputService.InputEnded:Connect(function(inputE)
+            if input == inputE then
+                if connections["drag"] then
+                    connections["drag"]:Disconnect()
+                    connections["drag"] = nil
+                end
+            end
+        end))
+    end
+end
+
                     -- if input.UserInputState ~= Enum.UserInputState.Begin then
                     --     RunService.UnbindFromRenderStep(RunService, "drag")
                     -- end
@@ -826,7 +840,9 @@ end
 function backgroundUserInput(input)
     local mousePos = UserInputService:GetMouseLocation() - GuiInset
     local inResizeRange, type = isInResizeRange(mousePos)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 and inResizeRange then
+    
+    -- แก้ไขบรรทัดนี้: เพิ่มการรองรับการ Touch (แตะหน้าจอ) สำหรับมือถือ
+    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and inResizeRange then
         local lastPos = UserInputService:GetMouseLocation()
         local offset = Background.AbsoluteSize - lastPos
         local currentPos = lastPos + offset
@@ -866,6 +882,7 @@ function backgroundUserInput(input)
         onBarInput(input)
     end
 end
+
 
 --- Gets the player an instance is descended from
 function getPlayerFromInstance(instance)
