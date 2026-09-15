@@ -2021,32 +2021,32 @@ end
 -- Copies the contents of the codebox
 newButton(
     "Copy Code",
-    function() return "Click to copy code" end,
+    function() return "คลิกเพื่อคัดลอกโค้ด" end,
     function()
         setclipboard(codebox:getString())
-        TextLabel.Text = "Copied successfully!"
+        TextLabel.Text = "คัดลอกสำเร็จแล้ว!"
     end
 )
 
 --- Copies the source script (that fired the remote)
 newButton(
     "Copy Remote",
-    function() return "Click to copy the path of the remote" end,
+    function() return "คลิกเพื่อคัดลอกเส้นทาง (Path) ของ Remote ตัวนี้" end,
     function()
         if selected and selected.Remote then
             setclipboard(v2s(selected.Remote))
-            TextLabel.Text = "Copied!"
+            TextLabel.Text = "คัดลอกแล้ว!"
         end
     end
 )
 
 -- Executes the contents of the codebox through loadstring
 newButton("Run Code",
-    function() return "Click to execute code" end,
+    function() return "คลิกเพื่อเรียกใช้โค้ด" end,
     function()
         local Remote = selected and selected.Remote
         if Remote then
-            TextLabel.Text = "Executing..."
+            TextLabel.Text = "กำลังดำเนินการ..."
             xpcall(function()
                 local returnvalue
                 if Remote:IsA("RemoteEvent") or Remote:IsA("UnreliableRemoteEvent") then
@@ -2055,40 +2055,40 @@ newButton("Run Code",
                     returnvalue = Remote:InvokeServer(unpack(selected.args))
                 end
 
-                TextLabel.Text = ("Executed successfully!\n%s"):format(v2s(returnvalue))
+                TextLabel.Text = ("ดำเนินการสำเร็จแล้ว!\n%s"):format(v2s(returnvalue))
             end,function(err)
-                TextLabel.Text = ("Execution error!\n%s"):format(err)
+                TextLabel.Text = ("เกิดข้อผิดพลาดในการดำเนินการ!\n%s"):format(err)
             end)
             return
         end
-        TextLabel.Text = "Source not found"
+        TextLabel.Text = "ไม่พบแหล่งที่มา"
     end
 )
 
 --- Gets the calling script (not super reliable but w/e)
 newButton(
     "Get Script",
-    function() return "Click to copy calling script to clipboard\nWARNING: Not super reliable, nil == could not find" end,
+    function() return "คลิกเพื่อคัดลอกเส้นทางของสคริปต์ต้นทางที่เรียกใช้ Remote นี้\n(คำเตือน: อาจค้นหาไม่เจอเสมอไป หากขึ้น nil คือหาไม่พบ)" end,
     function()
         if selected then
             if not selected.Source then
                 selected.Source = rawget(getfenv(selected.Function),"script")
             end
             setclipboard(v2s(selected.Source))
-            TextLabel.Text = "Done!"
+            TextLabel.Text = "เสร็จแล้ว!"
         end
     end
 )
 
 --- Decompiles the script that fired the remote and puts it in the code box
-newButton("Function Info",function() return "Click to view calling function information" end,
+newButton("Function Info",function() return "คลิกเพื่อดูข้อมูลเชิงลึกของฟังก์ชันที่ส่งข้อมูลมา" end,
 function()
     local func = selected and selected.Function
     if func then
         local typeoffunc = typeof(func)
 
         if typeoffunc ~= 'string' then
-            codebox:setRaw("--[[Generating Function Info please wait]]")
+            codebox:setRaw("--[[กำลังสร้างข้อมูลฟังก์ชัน โปรดรอสักครู่]]")
             RunService.Heartbeat:Wait()
             local lclosure = islclosure(func)
             local SourceScript = rawget(getfenv(func),"script")
@@ -2108,45 +2108,62 @@ function()
             if configs.advancedinfo then
                 local Remote = selected.Remote
 
+                            info = {
+                info = getinfo(func),
+                -- แปล: แจ้งเตือนกรณีฟังก์ชันไม่ใช่โค้ด Lua ธรรมดา แต่เป็นภาษา C (C Closure) ที่ดึงค่าคงที่ไม่ได้
+                constants = lclosure and deepclone(getconstants(func)) or "ไม่มีข้อมูล -- (ต้องการ Lua Closure แต่พบว่าเป็น C Closure)",
+                upvalues = deepclone(getupvalues(func)),
+                script = {
+                    SourceScript = SourceScript or 'nil',
+                    CallingScript = CallingScript or 'nil'
+                }
+            }
+                    
+            if configs.advancedinfo then
+                local Remote = selected.Remote
+
                 info["advancedinfo"] = {
                     Metamethod = selected.metamethod,
                     DebugId = {
-                        SourceScriptDebugId = SourceScript and typeof(SourceScript) == "Instance" and OldDebugId(SourceScript) or "N/A",
-                        CallingScriptDebugId = CallingScript and typeof(SourceScript) == "Instance" and OldDebugId(CallingScript) or "N/A",
+                        SourceScriptDebugId = SourceScript and typeof(SourceScript) == "Instance" and OldDebugId(SourceScript) or "ไม่มีข้อมูล (N/A)",
+                        CallingScriptDebugId = CallingScript and typeof(SourceScript) == "Instance" and OldDebugId(CallingScript) or "ไม่มีข้อมูล (N/A)",
                         RemoteDebugId = OldDebugId(Remote)
                     },
-                    Protos = lclosure and getprotos(func) or "N/A --Lua Closure expected got C Closure"
+                    -- แปล: แจ้งเตือนแบบเดียวกันกรณีเป็น C Closure
+                    Protos = lclosure and getprotos(func) or "ไม่มีข้อมูล -- (ต้องการ Lua Closure แต่พบว่าเป็น C Closure)"
                 }
 
                 if Remote:IsA("RemoteFunction") then
-                    info["advancedinfo"]["OnClientInvoke"] = getcallbackmember and (getcallbackmember(Remote,"OnClientInvoke") or "N/A") or "N/A --Missing function getcallbackmember"
+                    -- แปล: แจ้งเตือนกรณี Executor ขาดฟังก์ชัน getcallbackmember ทำให้ดึงข้อมูลการ Invoke กลับไม่ได้
+                    info["advancedinfo"]["OnClientInvoke"] = getcallbackmember and (getcallbackmember(Remote,"OnClientInvoke") or "ไม่มีข้อมูล (N/A)") or "ไม่มีข้อมูล -- (Executor ของคุณไม่มีฟังก์ชัน getcallbackmember)"
                 elseif getconnections then
                     info["advancedinfo"]["OnClientEvents"] = {}
 
                     for i,v in next, getconnections(Remote.OnClientEvent) do
                         info["advancedinfo"]["OnClientEvents"][i] = {
-                            Function = v.Function or "N/A",
-                            State = v.State or "N/A"
+                            Function = v.Function or "ไม่มีข้อมูล (N/A)",
+                            State = v.State or "ไม่มีข้อมูล (N/A)"
                         }
                     end
                 end
             end
-            codebox:setRaw("--[[Converting table to string please wait]]")
+
+            codebox:setRaw("--[[กำลังแปลงตารางเป็นสตริง โปรดรอสักครู่]]")
             selected.Function = v2v({functionInfo = info})
         end
-        codebox:setRaw("-- Calling function info\n-- Generated by the SimpleSpy V3 serializer\n\n"..selected.Function)
-        TextLabel.Text = "Done! Function info generated by the SimpleSpy V3 Serializer."
+        codebox:setRaw("-- ข้อมูลการเรียกใช้ฟังก์ชัน\n-- สร้างแล้ว \n\n"..selected.Function)
+        TextLabel.Text = "เสร็จแล้ว! ข้อมูลฟังก์ชันถูกสร้างขึ้นแล้ว."
     else
-        TextLabel.Text = "Error! Selected function was not found."
+        TextLabel.Text = "เกิดข้อผิดพลาด! ไม่พบฟังก์ชันที่เลือก."
     end
 end)
 
 --- Clears the Remote logs
 newButton(
     "Clr Logs",
-    function() return "Click to clear logs" end,
+    function() return "คลิกเพื่อล้างประวัติการดักจับ (Logs) ทั้งหมด" end,
     function()
-        TextLabel.Text = "Clearing..."
+        TextLabel.Text = "กำลังเคลียร์..."
         clear(logs)
         for i,v in next, LogList:GetChildren() do
             if not v:IsA("UIListLayout") then
@@ -2155,18 +2172,18 @@ newButton(
         end
         codebox:setRaw("")
         selected = nil
-        TextLabel.Text = "Logs cleared!"
+        TextLabel.Text = "เคลียร์สำเร็จแล้ว!"
     end
 )
 
 --- Excludes the selected.Log Remote from the RemoteSpy
 newButton(
     "Exclude (i)",
-    function() return "Click to exclude this Remote.\nExcluding a remote makes SimpleSpy ignore it, but it will continue to be usable." end,
+    function() return "ละเว้นเฉพาะ Remote ตัวนี้ (ตามรหัส ID)\nมันจะยังทำงานในเกมปกติ แต่ Spy จะไม่นำมาแสดงอีก" end,
     function()
         if selected then
             blacklist[OldDebugId(selected.Remote)] = true
-            TextLabel.Text = "Excluded!"
+            TextLabel.Text = "ยกเว้นสำเร็จ!"
         end
     end
 )
@@ -2174,42 +2191,42 @@ newButton(
 --- Excludes all Remotes that share the same name as the selected.Log remote from the RemoteSpy
 newButton(
     "Exclude (n)",
-    function() return "Click to exclude all remotes with this name.\nExcluding a remote makes SimpleSpy ignore it, but it will continue to be usable." end,
+    function() return "ละเว้น Remote ทุกตัวที่ใช้ 'ชื่อนี้'\nมันจะยังทำงานในเกมปกติ แต่ Spy จะไม่นำมาแสดงอีก" end,
     function()
         if selected then
             blacklist[selected.Name] = true
-            TextLabel.Text = "Excluded!"
+            TextLabel.Text = "ยกเว้นสำเร็จ!"
         end
     end
 )
 
 --- clears blacklist
 newButton("Clr Blacklist",
-function() return "Click to clear the blacklist.\nExcluding a remote makes SimpleSpy ignore it, but it will continue to be usable." end,
+function() return "ล้างรายการที่ถูกละเว้น (Blacklist) ทั้งหมด" end,
 function()
     blacklist = {}
-    TextLabel.Text = "Blacklist cleared!"
+    TextLabel.Text = "รายการถูกล้างแล้ว!"
 end)
 
 --- Prevents the selected.Log Remote from firing the server (still logged)
 newButton(
     "Block (i)",
-    function() return "Click to stop this remote from firing.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server." end,
+    function() return "บล็อกการทำงานเฉพาะ Remote ตัวนี้ (ตามรหัส ID)\nมันจะยังแสดงใน Spy แต่ถูกระงับไม่ให้ส่งข้อมูลไปเซิร์ฟเวอร์" end,
     function()
         if selected then
             blocklist[OldDebugId(selected.Remote)] = true
-            TextLabel.Text = "Excluded!"
+            TextLabel.Text = "ยกเว้นสำเร็จ!"
         end
     end
 )
 
 --- Prevents all remotes from firing that share the same name as the selected.Log remote from the RemoteSpy (still logged)
 newButton("Block (n)",function()
-    return "Click to stop remotes with this name from firing.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server." end,
+    return "บล็อกการทำงานของ Remote ทุกตัวที่ใช้ 'ชื่อนี้'\nมันจะยังแสดงใน Spy แต่ถูกระงับไม่ให้ส่งข้อมูลไปเซิร์ฟเวอร์" end,
     function()
         if selected then
             blocklist[selected.Name] = true
-            TextLabel.Text = "Excluded!"
+            TextLabel.Text = "ยกเว้นสำเร็จ!"
         end
     end
 )
@@ -2217,41 +2234,41 @@ newButton("Block (n)",function()
 --- clears blacklist
 newButton(
     "Clr Blocklist",
-    function() return "Click to stop blocking remotes.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server." end,
+    function() return "คลิกเพื่อยกเลิกการบล็อกรีโมท.\nการบล็อกเซิร์ฟเวอร์ระยะไกลจะไม่ลบออกจากบันทึกของ Spy แต่จะไม่ทำให้เซิร์ฟเวอร์นั้นทำงานต่อไป." end,
     function()
         blocklist = {}
-        TextLabel.Text = "Blocklist cleared!"
+        TextLabel.Text = "ล้างรายชื่อบล็อกแล้ว!"
     end
 )
 
 --- Attempts to decompile the source script
 newButton("Decompile",
     function()
-        return "Decompile source script"
+        return "ถอดรหัสสคริปต์ต้นฉบับ"
     end,function()
         if decompile then
             if selected and selected.Source then
                 local Source = selected.Source
                 if not DecompiledScripts[Source] then
-                    codebox:setRaw("--[[Decompiling]]")
+                    codebox:setRaw("--[[กำลังถอดรหัส]]")
 
                     xpcall(function()
-                        local decompiledsource = decompile(Source):gsub("-- Decompiled with the Synapse X Luau decompiler.","")
+                        local decompiledsource = decompile(Source):gsub("-- ถอดรหัสด้วยโปรแกรม Synapse X Luau decompiler.","")
                         local Sourcev2s = v2s(Source)
                         if (decompiledsource):find("script") and Sourcev2s then
                             DecompiledScripts[Source] = ("local script = %s\n%s"):format(Sourcev2s,decompiledsource)
                         end
                     end,function(err)
-                        return codebox:setRaw(("--[[\nAn error has occured\n%s\n]]"):format(err))
+                        return codebox:setRaw(("--[[\nเกิดข้อผิดพลาดขึ้น\n%s\n]]"):format(err))
                     end)
                 end
-                codebox:setRaw(DecompiledScripts[Source] or "--No Source Found")
-                TextLabel.Text = "Done!"
+                codebox:setRaw(DecompiledScripts[Source] or "--ไม่พบแหล่งที่มา")
+                TextLabel.Text = "เสร็จแล้ว!"
             else
-                TextLabel.Text = "Source not found!"
+                TextLabel.Text = "ไม่พบแหล่งที่มา!"
             end
         else
-            TextLabel.Text = "Missing function (decompile)"
+            TextLabel.Text = "ฟังก์ชันที่หายไปในการถอดรหัส"
         end
     end
 )
@@ -2276,30 +2293,30 @@ newButton("Decompile",
 
 newButton(
     "Disable Info",
-    function() return string.format("[%s] Toggle function info (because it can cause lag in some games)", configs.funcEnabled and "ENABLED" or "DISABLED") end,
+    function() return string.format("[%s] ปิดการแสดงข้อมูลฟังก์ชัน (เนื่องจากอาจทำให้เกิดอาการแล็กในบางเกม)", configs.funcEnabled and "ENABLED" or "DISABLED") end,
     function()
         configs.funcEnabled = not configs.funcEnabled
-        TextLabel.Text = string.format("[%s] Toggle function info (because it can cause lag in some games)", configs.funcEnabled and "ENABLED" or "DISABLED")
+        TextLabel.Text = string.format("[%s] ปิดใช้งานข้อมูลฟังก์ชัน (เนื่องจากอาจทำให้เกิดอาการแล็กในบางเกม))", configs.funcEnabled and "ENABLED" or "DISABLED")
     end
 )
 
 newButton(
     "Autoblock",
-    function() return string.format("[%s] [BETA] Intelligently detects and excludes spammy remote calls from logs", configs.autoblock and "ENABLED" or "DISABLED") end,
+    function() return string.format("[%s] [เบต้า] ตรวจจับและแยกการโทรจากระยะไกลที่เป็นสแปมออกจากบันทึกอย่างชาญฉลาด", configs.autoblock and "ENABLED" or "DISABLED") end,
     function()
         configs.autoblock = not configs.autoblock
-        TextLabel.Text = string.format("[%s] [BETA] Intelligently detects and excludes spammy remote calls from logs", configs.autoblock and "ENABLED" or "DISABLED")
+        TextLabel.Text = string.format("[%s] [เบต้า] ตรวจจับและคัดกรองการโทรจากระยะไกลที่เป็นสแปมออกจากบันทึกอย่างชาญฉลาด", configs.autoblock and "ENABLED" or "DISABLED")
         history = {}
         excluding = {}
     end
 )
 
 newButton("Logcheckcaller",function()
-    return ("[%s] Log remotes fired by the client"):format(configs.logcheckcaller and "ENABLED" or "DISABLED")
+    return ("[%s] บันทึกการเรียกใช้งานระยะไกลโดยไคลเอ็นต์"):format(configs.logcheckcaller and "ENABLED" or "DISABLED")
 end,
 function()
     configs.logcheckcaller = not configs.logcheckcaller
-    TextLabel.Text = ("[%s] Log remotes fired by the client"):format(configs.logcheckcaller and "ENABLED" or "DISABLED")
+    TextLabel.Text = ("[%s] บันทึกการเรียกใช้งานระยะไกลโดยไคลเอ็นต์"):format(configs.logcheckcaller and "ENABLED" or "DISABLED")
 end)
 
 --[[newButton("Log returnvalues",function()
@@ -2311,40 +2328,40 @@ function()
 end)]]
 
 newButton("Advanced Info",function()
-    return ("[%s] Display more remoteinfo"):format(configs.advancedinfo and "ENABLED" or "DISABLED")
+    return ("[%s] แสดงข้อมูลระยะไกลเพิ่มเติม"):format(configs.advancedinfo and "ENABLED" or "DISABLED")
 end,
 function()
     configs.advancedinfo = not configs.advancedinfo
-    TextLabel.Text = ("[%s] Display more remoteinfo"):format(configs.advancedinfo and "ENABLED" or "DISABLED")
+    TextLabel.Text = ("[%s] แสดงข้อมูลระยะไกลเพิ่มเติม"):format(configs.advancedinfo and "ENABLED" or "DISABLED")
 end)
 
 newButton("Join Discord",function()
-    return "Joins The Simple Spy Discord"
+    return "เข้าร่วม Discord"
 end,
 function()
-    setclipboard("https://discord.com/invite/AWS6ez9")
-    TextLabel.Text = "Copied invite to your clipboard"
+    setclipboard("ยังไม่มี")
+    TextLabel.Text = "คัดลอกไปยังคลิปบอร์ดของคุณแล้ว"
     if request then
-        request({Url = 'http://127.0.0.1:6463/rpc?v=1',Method = 'POST',Headers = {['Content-Type'] = 'application/json', Origin = 'https://discord.com'},Body = http:JSONEncode({cmd = 'INVITE_BROWSER',nonce = http:GenerateGUID(false),args = {code = 'AWS6ez9'}})})
+        request({Url = 'http://127.0.0.1:6463/rpc?v=1',Method = 'POST',Headers = {['Content-Type'] = 'application/json', Origin = 'https://discord.com'},Body = http:JSONEncode({cmd = 'INVITE_BROWSER',nonce = http:GenerateGUID(false),args = {code = 'ชื่อกลุ่มดิส'}})})
     end
 end)
 
 if configs.supersecretdevtoggle then
-    newButton("Load SSV2.2",function()
-        return "Load's Simple Spy V2.2"
+    newButton("Load V1",function()
+        return "โหลด"
     end,
     function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/exxtremestuffs/SimpleSpySource/master/SimpleSpy.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com"))()
     end)
-    newButton("Load SSV3",function()
-        return "Load's Simple Spy V3"
+    newButton("Load V2",function()
+        return "โหลด"
     end,
     function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com"))()
     end)
     local SuperSecretFolder = Create("Folder",{Parent = SimpleSpy3})
     newButton("SUPER SECRET BUTTON",function()
-        return "You dont need a discription you already know what it does"
+        return "คุณไม่จำเป็นต้องมีคำอธิบาย คุณก็รู้อยู่แล้วว่ามันทำอะไรได้"
     end,
     function()
         SuperSecretFolder:ClearAllChildren()
