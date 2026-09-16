@@ -2236,14 +2236,14 @@ newButton("เคลียร์ Logs", function() return "ล้างประ
     TextLabel.Text = "ล้างประวัติสำเร็จ!"
 end)
 
-newButton("ยกเว้น(i)", function() return "ซ่อน Remote นี้ (ID)\nยังใช้งานได้ แต่ไม่แสดงบน UI" end, function()
+newButton("ซ่อนรีโมท(i)", function() return "ซ่อน Remote นี้ (ID)\nยังใช้งานได้ แต่ไม่แสดงบน UI" end, function()
     if selected then
         blacklist[OldDebugId(selected.Remote)] = true
         TextLabel.Text = "ซ่อนแล้ว!"
     end
 end)
 
-newButton("ยกเว้น(n)", function() return "ซ่อน Remote นี้ (ชื่อ)\nยังใช้งานได้ แต่ไม่แสดงบน UI" end, function()
+newButton("ซ่อนรีโมท(n)", function() return "ซ่อน Remote นี้ (ชื่อ)\nยังใช้งานได้ แต่ไม่แสดงบน UI" end, function()
     if selected then
         blacklist[selected.Name] = true
         TextLabel.Text = "ซ่อนแล้ว!"
@@ -2331,29 +2331,6 @@ newButton("เข้าร่วม Discord",function() return "เข้าร�
 end)
             ----- NEW OFFENSIVE MODULES -----
 
-newButton("สแกนปุ่ม", function() return "สแกนหา LocalScript ที่ฝังอยู่ในปุ่ม UI ของเกม (หา Teleport / Shop)" end, function()
-    local PlayerGui = game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")
-    if not PlayerGui then 
-        TextLabel.Text = "ไม่พบ PlayerGui"
-        return 
-    end
-    
-    local found = {}
-    for _, v in next, PlayerGui:GetDescendants() do
-        -- กรองหา LocalScript ที่ทำงานภายใต้ UI ประเภทปุ่มกด
-        if v:IsA("LocalScript") and v.Parent and (v.Parent:IsA("TextButton") or v.Parent:IsA("ImageButton") or v.Parent:IsA("GuiButton")) then
-            table.insert(found, v:GetFullName())
-        end
-    end
-    
-    if #found > 0 then
-        codebox:setRaw("-- 🔍 พบปุ่มที่มี LocalScript ซ่อนอยู่ (นำ Path ไปส่องใน Dex):\n\n" .. table.concat(found, "\n\n"))
-        TextLabel.Text = "สแกนสำเร็จ! พบ " .. #found .. " รายการ"
-    else
-        codebox:setRaw("-- ❌ ไม่พบ LocalScript ในปุ่ม UI ของเกมนี้")
-        TextLabel.Text = "สแกนสำเร็จ แต่ไม่พบข้อมูล"
-    end
-end)
 
 -- ประกาศตัวแปรสถานะแบบ Local Scope ป้องกัน Memory Leak
 local spamLoop = nil
