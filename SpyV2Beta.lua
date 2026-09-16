@@ -2329,6 +2329,73 @@ newButton("เข้าร่วม Discord",function() return "เข้าร�
         request({Url = 'http://127.0.0.1:6463/rpc?v=1',Method = 'POST',Headers = {['Content-Type'] = 'application/json', Origin = 'https://discord.com'},Body = http:JSONEncode({cmd = 'INVITE_BROWSER',nonce = http:GenerateGUID(false),args = {code = 'ไม่มี'}})})
     end
 end)
+            ----- NEW OFFENSIVE MODULES -----
+
+newButton("สแกนปุ่ม", function() return "สแกนหา LocalScript ที่ฝังอยู่ในปุ่ม UI ของเกม (หา Teleport / Shop)" end, function()
+    local PlayerGui = game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")
+    if not PlayerGui then 
+        TextLabel.Text = "ไม่พบ PlayerGui"
+        return 
+    end
+    
+    local found = {}
+    for _, v in next, PlayerGui:GetDescendants() do
+        -- กรองหา LocalScript ที่ทำงานภายใต้ UI ประเภทปุ่มกด
+        if v:IsA("LocalScript") and v.Parent and (v.Parent:IsA("TextButton") or v.Parent:IsA("ImageButton") or v.Parent:IsA("GuiButton")) then
+            table.insert(found, v:GetFullName())
+        end
+    end
+    
+    if #found > 0 then
+        codebox:setRaw("-- 🔍 พบปุ่มที่มี LocalScript ซ่อนอยู่ (นำ Path ไปส่องใน Dex):\n\n" .. table.concat(found, "\n\n"))
+        TextLabel.Text = "สแกนสำเร็จ! พบ " .. #found .. " รายการ"
+    else
+        codebox:setRaw("-- ❌ ไม่พบ LocalScript ในปุ่ม UI ของเกมนี้")
+        TextLabel.Text = "สแกนสำเร็จ แต่ไม่พบข้อมูล"
+    end
+end)
+
+-- ประกาศตัวแปรสถานะแบบ Local Scope ป้องกัน Memory Leak
+local spamLoop = nil
+
+newButton("รันอัตโนมัติ", function() return "เปิด/ปิด การยิง Remote อัตโนมัติ (สแปม)" end, function()
+    if spamLoop then
+        -- Toggle Off (ยกเลิกลูป)
+        task.cancel(spamLoop)
+        spamLoop = nil
+        TextLabel.Text = "🛑 หยุดรันอัตโนมัติแล้ว!"
+        return
+    end
+    
+    local Remote = selected and selected.Remote
+    if Remote then
+        local args = selected.args
+        local isEvent = Remote:IsA("RemoteEvent") or Remote:IsA("UnreliableRemoteEvent")
+        local isFunction = Remote:IsA("RemoteFunction")
+        
+        TextLabel.Text = "🚀 เริ่มรันอัตโนมัติ! (คลิกอีกครั้งเพื่อหยุด)"
+        
+        -- Generate โค้ดลูปแสดงบน CodeBox ให้ผู้ใช้ปรับ delay ได้
+        local scriptGen = "-- สคริปต์ Auto-Spam\nlocal delay = 0.1 -- ⏱️ ปรับความเร็วตรงนี้\nwhile task.wait(delay) do\n"
+        scriptGen = scriptGen .. "    " .. (selected.GenScript or "") .. "\nend"
+        codebox:setRaw(scriptGen)
+        
+        -- Toggle On (รันลูปใน Background Thread)
+        spamLoop = task.spawn(function()
+            while task.wait(0.1) do -- ความเร็ว Default: 10 ครั้ง/วินาที
+                pcall(function()
+                    if isEvent then
+                        Remote:FireServer(unpack(args))
+                    elseif isFunction then
+                        Remote:InvokeServer(unpack(args))
+                    end
+                end)
+            end
+        end)
+    else
+        TextLabel.Text = "❌ โปรดเลือก Remote จากฝั่งซ้ายก่อนรัน!"
+    end
+end)
 
 if configs.supersecretdevtoggle then
     newButton("Load V1",function() return "โหลดเวอร์ชัน 1" end, function()
