@@ -978,9 +978,6 @@ function makeToolTip(enable, text)
 end
 
 --- Creates new function button (below codebox)
---- @param name string
----@param description function
----@param onClick function
 function newButton(name, description, onClick)
     local FunctionTemplate = Create("Frame",{Name = "FunctionTemplate",Parent = ScrollingFrame,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Size = UDim2.new(0, 94, 0, 27)})
     
@@ -993,26 +990,61 @@ function newButton(name, description, onClick)
     
     local Text = Create("TextLabel",{Text = name,Name = "Text",Parent = FunctionTemplate,BackgroundTransparency = 1,Position = UDim2.new(0, 16, 0, 2),Size = UDim2.new(0, 72, 0, 23),ZIndex = 2,Font = Enum.Font.GothamMedium,TextColor3 = Theme.TextLight,TextSize = 11,TextXAlignment = Enum.TextXAlignment.Left})
 
+    -- สีปุ่มตอนถูกกด (สีดำด้าน)
+    local clickedColor = Color3.fromRGB(15, 15, 18)
+
+    -- จัดการ Hover ให้เช็คสถานะ Toggled ก่อนเสมอ
     Button.MouseEnter:Connect(function()
-        TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Theme.ButtonHover}):Play()
+        if not Button:GetAttribute("Toggled") then
+            TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Theme.ButtonHover}):Play()
+        end
         TweenService:Create(stroke, TweenInfo.new(0.2), {Transparency = 0}):Play()
         makeToolTip(true, description())
     end)
+    
     Button.MouseLeave:Connect(function()
-        TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Theme.ButtonBG}):Play()
+        if not Button:GetAttribute("Toggled") then
+            TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Theme.ButtonBG}):Play()
+        end
         TweenService:Create(stroke, TweenInfo.new(0.2), {Transparency = 0.8}):Play()
         makeToolTip(false)
     end)
+    
     FunctionTemplate.AncestryChanged:Connect(function()
         makeToolTip(false)
     end)
+    
+    -- จัดการสถานะเวลากดคลิกปุ่ม
     Button.MouseButton1Click:Connect(function(...)
         logthread(running())
-        onClick(FunctionTemplate, ...)
+        
+        -- รับค่า State คืนกลับมาจากฟังก์ชันของปุ่ม
+        local toggleState = onClick(FunctionTemplate, ...)
+        
+        if toggleState == true then
+            -- โหมด Toggle: เปิด (ค้างสีเข้ม)
+            Button:SetAttribute("Toggled", true)
+            TweenService:Create(Button, TweenInfo.new(0.15), {BackgroundColor3 = clickedColor}):Play()
+            
+        elseif toggleState == false then
+            -- โหมด Toggle: ปิด (กลับสีเดิม)
+            Button:SetAttribute("Toggled", false)
+            TweenService:Create(Button, TweenInfo.new(0.15), {BackgroundColor3 = Theme.ButtonHover}):Play()
+            
+        else
+            -- โหมด One-Shot: กดครั้งเดียว (กระพริบสีเข้มแล้วคืนค่าทันที)
+            TweenService:Create(Button, TweenInfo.new(0.1), {BackgroundColor3 = clickedColor}):Play()
+            task.delay(0.15, function()
+                if not Button:GetAttribute("Toggled") then
+                    TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Theme.ButtonHover}):Play()
+                end
+            end)
+        end
     end)
+    
     updateFunctionCanvas()
     end
-
+    
 --- Adds new Remote to logs
 --- @param name string The name of the remote being logged
 --- @param type string The type of the remote being logged (either 'function' or 'event')
@@ -2098,9 +2130,6 @@ end
             - blacklist: (string[] | Instance[] (RemoteEvent) | Instance[] (RemoteFunction)) an array of blacklisted names and remotes
             - codebox: (Instance (TextBox)) the textbox that holds all the code- cleared often
 ]]
--- Copies the contents of the codebox
------ ADD ONS ----- (easily add or remove additonal functionality to the RemoteSpy!)
-
 newButton("คัดลอก Code", function() return "คัดลอกโค้ดทั้งหมด" end, function()
     setclipboard(codebox:getString())
     TextLabel.Text = "คัดลอกสำเร็จ!"
@@ -2203,16 +2232,14 @@ newButton("เคลียร์ Logs", function() return "ล้างประ
     local keepLogs = {}
     local keepRemoteLogs = {}
     
-    -- กรอง Data ในตาราง logs หลัก
     for _, v in pairs(logs) do
         if v.Pinned then
-            table.insert(keepLogs, v) -- อนุรักษ์ตัวที่ปักหมุด
+            table.insert(keepLogs, v) 
         else
-            if v.Log then v.Log:Destroy() end -- ทำลาย UI ตัวที่ไม่ได้ปักหมุด
+            if v.Log then v.Log:Destroy() end 
         end
     end
     
-    -- ตัด Disconnect ขยะในตาราง Event เพื่อคืน RAM
     for _, v in pairs(remoteLogs) do
         if v[2] and v[2].Parent then
             table.insert(keepRemoteLogs, v)
@@ -2223,11 +2250,9 @@ newButton("เคลียร์ Logs", function() return "ล้างประ
         end
     end
     
-    -- อัปเดตตารางให้เหลือแค่ตัวรอดชีวิต
     logs = keepLogs
     remoteLogs = keepRemoteLogs
     
-    -- หาก Remote ที่กำลังเปิดดูอยู่ (selected) ไม่ได้ถูกปักหมุด ให้ล้าง CodeBox ด้วย
     if not (selected and selected.Pinned) then
         selected = nil
         codebox:setRaw("")
@@ -2300,9 +2325,11 @@ newButton("ถอดรหัส", function() return "ถอดรหัสส�
     end
 end)
 
+-- 🔴 แก้ไข: คืนค่า (Return) สถานะตัวแปรของระบบเปิด/ปิด (Toggle) เพื่อให้สีเข้ม/สว่างทำงาน
 newButton("ปิดใช้งานข้อมูล", function() return string.format("[%s] เปิด/ปิด ข้อมูลฟังก์ชัน\n(ปิดไว้ช่วยลดความหน่วง)", configs.funcEnabled and "เปิดใช้งาน" or "ปิดใช้งาน") end, function()
     configs.funcEnabled = not configs.funcEnabled
     TextLabel.Text = string.format("[%s] ข้อมูลฟังก์ชัน", configs.funcEnabled and "เปิดใช้งาน" or "ปิดใช้งาน")
+    return configs.funcEnabled 
 end)
 
 newButton("บล็อกอัตโนมัติ", function() return string.format("[%s] ระบบ AI บล็อกสแปม Remote", configs.autoblock and "เปิดใช้งาน" or "ปิดใช้งาน") end, function()
@@ -2310,16 +2337,19 @@ newButton("บล็อกอัตโนมัติ", function() return string
     TextLabel.Text = string.format("[%s] บล็อกสแปม", configs.autoblock and "เปิดใช้งาน" or "ปิดใช้งาน")
     history = {}
     excluding = {}
+    return configs.autoblock
 end)
 
 newButton("ผู้เรียก log",function() return ("[%s] ดักเฉพาะ Remote ที่ถูกเรียกโดยสคริปต์"):format(configs.logcheckcaller and "เปิดใช้งาน" or "ปิดใช้งาน") end, function()
     configs.logcheckcaller = not configs.logcheckcaller
     TextLabel.Text = ("[%s] โหมดเฉพาะสคริปต์"):format(configs.logcheckcaller and "เปิดใช้งาน" or "ปิดใช้งาน")
+    return configs.logcheckcaller
 end)
 
 newButton("ข้อมูลขั้นสูง",function() return ("[%s] แสดงข้อมูลเชิงลึก"):format(configs.advancedinfo and "เปิดใช้งาน" or "ปิดใช้งาน") end, function()
     configs.advancedinfo = not configs.advancedinfo
     TextLabel.Text = ("[%s] ข้อมูลเชิงลึก"):format(configs.advancedinfo and "เปิดใช้งาน" or "ปิดใช้งาน")
+    return configs.advancedinfo
 end)
 
 newButton("เข้าร่วม Discord",function() return "เข้าร่วม Discord" end, function()
@@ -2329,19 +2359,17 @@ newButton("เข้าร่วม Discord",function() return "เข้าร�
         request({Url = 'http://127.0.0.1:6463/rpc?v=1',Method = 'POST',Headers = {['Content-Type'] = 'application/json', Origin = 'https://discord.com'},Body = http:JSONEncode({cmd = 'INVITE_BROWSER',nonce = http:GenerateGUID(false),args = {code = 'ไม่มี'}})})
     end
 end)
-            ----- NEW OFFENSIVE MODULES -----
 
+----- NEW OFFENSIVE MODULES -----
 
--- ประกาศตัวแปรสถานะแบบ Local Scope ป้องกัน Memory Leak
 local spamLoop = nil
 
 newButton("รันอัตโนมัติ", function() return "เปิด/ปิด การยิง Remote อัตโนมัติ (สแปม)" end, function()
     if spamLoop then
-        -- Toggle Off (ยกเลิกลูป)
         task.cancel(spamLoop)
         spamLoop = nil
-        TextLabel.Text = "🛑 หยุดรันอัตโนมัติแล้ว!"
-        return
+        TextLabel.Text = "[หยุด] หยุดรันอัตโนมัติแล้ว!"
+        return false -- 🔴 ส่งค่าปิด (False) เพื่อให้ปุ่มกลับไปเป็นสีสว่าง
     end
     
     local Remote = selected and selected.Remote
@@ -2350,16 +2378,15 @@ newButton("รันอัตโนมัติ", function() return "เปิ�
         local isEvent = Remote:IsA("RemoteEvent") or Remote:IsA("UnreliableRemoteEvent")
         local isFunction = Remote:IsA("RemoteFunction")
         
-        TextLabel.Text = "🚀 เริ่มรันอัตโนมัติ! (คลิกอีกครั้งเพื่อหยุด)"
+        TextLabel.Text = "[เริ่ม] เริ่มรันอัตโนมัติ! (คลิกอีกครั้งเพื่อหยุด)"
         
-        -- Generate โค้ดลูปแสดงบน CodeBox ให้ผู้ใช้ปรับ delay ได้
-        local scriptGen = "-- สคริปต์ Auto-Spam\nlocal delay = 0.1 -- ⏱️ ปรับความเร็วตรงนี้\nwhile task.wait(delay) do\n"
+        -- ลบอีโมจิออกทั้งหมด
+        local scriptGen = "-- สคริปต์ Auto-Spam\nlocal delay = 0.1 -- ปรับความเร็วตรงนี้\nwhile task.wait(delay) do\n"
         scriptGen = scriptGen .. "    " .. (selected.GenScript or "") .. "\nend"
         codebox:setRaw(scriptGen)
         
-        -- Toggle On (รันลูปใน Background Thread)
         spamLoop = task.spawn(function()
-            while task.wait(0.1) do -- ความเร็ว Default: 10 ครั้ง/วินาที
+            while task.wait(0.1) do
                 pcall(function()
                     if isEvent then
                         Remote:FireServer(unpack(args))
@@ -2369,10 +2396,14 @@ newButton("รันอัตโนมัติ", function() return "เปิ�
                 end)
             end
         end)
+        
+        return true -- 🟢 ส่งค่าเปิด (True) เพื่อให้ปุ่มค้างเป็นสีดำเข้ม
     else
-        TextLabel.Text = "❌ โปรดเลือก Remote จากฝั่งซ้ายก่อนรัน!"
+        TextLabel.Text = "[ข้อผิดพลาด] โปรดเลือก Remote จากฝั่งซ้ายก่อนรัน!"
+        return false -- 🔴 เกิดข้อผิดพลาด ส่งค่าปิดไม่ให้ค้างสีดำ
     end
 end)
+        
 
 if configs.supersecretdevtoggle then
     newButton("Load V1",function() return "โหลดเวอร์ชัน 1" end, function()
