@@ -1024,6 +1024,7 @@ function newRemote(type, data)
     if layoutOrderNum < 1 then layoutOrderNum = 999999999 end
     local remote = data.remote
     local callingscript = data.callingscript
+    local originalLayout = layoutOrderNum -- เก็บค่าลำดับเดิมเพื่อคืนค่าเวลายกเลิกปักหมุด
     
     local accentColor = (type == "event" and Color3.fromRGB(230, 40, 40)) or Color3.fromRGB(150, 60, 255)
 
@@ -1036,10 +1037,14 @@ function newRemote(type, data)
     local ColorBar = Create("Frame",{Name = "ColorBar",Parent = RemoteTemplate,BackgroundColor3 = accentColor,BorderSizePixel = 0,Position = UDim2.new(0, 10, 0, 9),Size = UDim2.new(0, 3, 0, 12),ZIndex = 2})
     Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = ColorBar})
     
-    local Text = Create("TextLabel",{TextTruncate = Enum.TextTruncate.AtEnd,Name = "Text",Parent = RemoteTemplate,BackgroundTransparency = 1,Position = UDim2.new(0, 18, 0, 2),Size = UDim2.new(0, 95, 0, 26),ZIndex = 2,Font = Enum.Font.GothamMedium,Text = remote.Name,TextColor3 = Theme.TextLight,TextSize = 12,TextXAlignment = Enum.TextXAlignment.Left})
+    -- หดความกว้าง TextLabel (จาก 95 เป็น 75) เพื่อเว้นพื้นที่ให้ปุ่มดาว
+    local Text = Create("TextLabel",{TextTruncate = Enum.TextTruncate.AtEnd,Name = "Text",Parent = RemoteTemplate,BackgroundTransparency = 1,Position = UDim2.new(0, 18, 0, 2),Size = UDim2.new(0, 75, 0, 26),ZIndex = 2,Font = Enum.Font.GothamMedium,Text = remote.Name,TextColor3 = Theme.TextLight,TextSize = 12,TextXAlignment = Enum.TextXAlignment.Left})
+
+    -- สร้างปุ่มปักหมุด (Pin Button)
+    local PinBtn = Create("TextButton",{Name = "Pin",Parent = RemoteTemplate,BackgroundTransparency = 1,Position = UDim2.new(1, -22, 0, 2),Size = UDim2.new(0, 20, 0, 26),Font = Enum.Font.GothamBold,Text = "⭐",TextColor3 = Color3.fromRGB(255, 255, 255),TextSize = 10,ZIndex = 3})
 
     local log = {
-        Name = remote.name,
+        Name = remote.Name, -- Fixed: แก้จาก remote.name เป็น remote.Name
         Function = data.infofunc or "--Function Info is disabled",
         Remote = remote,
         DebugId = data.id,
@@ -1047,18 +1052,32 @@ function newRemote(type, data)
         args = data.args,
         Log = RemoteTemplate,
         Button = Button,
-        Blocked = data.blocked,
+        Blocked = data.blockcheck, -- Fixed: แก้จาก data.blocked เป็น data.blockcheck
         Source = callingscript,
         returnvalue = data.returnvalue,
-        GenScript = "-- Generating, please wait...\n-- (If this message persists, the remote args are likely extremely long)"
+        GenScript = "-- Generating, please wait...\n-- (If this message persists, the remote args are likely extremely long)",
+        OriginalLayout = originalLayout,
+        Pinned = false 
     }
+
+    -- กลไกสลับสถานะการปักหมุด
+    PinBtn.MouseButton1Click:Connect(function()
+        log.Pinned = not log.Pinned
+        if log.Pinned then
+            PinBtn.TextColor3 = Color3.fromRGB(255, 215, 0) -- เปลี่ยนเป็นสีเหลือง
+            RemoteTemplate.LayoutOrder = -100000 -- ดันขึ้นบนสุดทะลุทุก Layer
+        else
+            PinBtn.TextColor3 = Color3.fromRGB(255, 255, 255) -- คืนค่าสีขาว
+            RemoteTemplate.LayoutOrder = log.OriginalLayout -- คืนค่าตำแหน่งเดิม
+        end
+    end)
 
     logs[#logs + 1] = log
     local connect = Button.MouseButton1Click:Connect(function()
         logthread(running())
         eventSelect(RemoteTemplate)
         log.GenScript = genScript(log.Remote, log.args)
-        if blocked then
+        if log.Blocked then
             log.GenScript = "-- THIS REMOTE WAS PREVENTED FROM FIRING TO THE SERVER BY SIMPLESPY\n\n" .. log.GenScript
         end
         if selected == log and RemoteTemplate then
@@ -1069,8 +1088,8 @@ function newRemote(type, data)
     table.insert(remoteLogs, 1, {connect, RemoteTemplate})
     clean()
     updateRemoteCanvas()
-end
-
+        end
+        
 --- Generates a script from the provided arguments (first has to be remote path)
 function genScript(remote, args)
     prevTables = {}
@@ -2164,14 +2183,42 @@ newButton("ข้อมูลฟังก์ชัน",function() return "ดู
     end
 end)
 
-newButton("เคลียร์ Logs", function() return "ล้างประวัติที่ดักจับทั้งหมด" end, function()
+newButton("เคลียร์ Logs", function() return "ล้างประวัติทั้งหมด (ยกเว้นตัวที่ปักหมุดไว้)" end, function()
     TextLabel.Text = "กำลังล้างข้อมูล..."
-    clear(logs)
-    for i,v in next, LogList:GetChildren() do
-        if not v:IsA("UIListLayout") then v:Destroy() end
+    
+    local keepLogs = {}
+    local keepRemoteLogs = {}
+    
+    -- กรอง Data ในตาราง logs หลัก
+    for _, v in pairs(logs) do
+        if v.Pinned then
+            table.insert(keepLogs, v) -- อนุรักษ์ตัวที่ปักหมุด
+        else
+            if v.Log then v.Log:Destroy() end -- ทำลาย UI ตัวที่ไม่ได้ปักหมุด
+        end
     end
-    codebox:setRaw("")
-    selected = nil
+    
+    -- ตัด Disconnect ขยะในตาราง Event เพื่อคืน RAM
+    for _, v in pairs(remoteLogs) do
+        if v[2] and v[2].Parent then
+            table.insert(keepRemoteLogs, v)
+        else
+            if typeof(v[1]) == "RBXScriptConnection" then
+                v[1]:Disconnect()
+            end
+        end
+    end
+    
+    -- อัปเดตตารางให้เหลือแค่ตัวรอดชีวิต
+    logs = keepLogs
+    remoteLogs = keepRemoteLogs
+    
+    -- หาก Remote ที่กำลังเปิดดูอยู่ (selected) ไม่ได้ถูกปักหมุด ให้ล้าง CodeBox ด้วย
+    if not (selected and selected.Pinned) then
+        selected = nil
+        codebox:setRaw("")
+    end
+    
     TextLabel.Text = "ล้างประวัติสำเร็จ!"
 end)
 
