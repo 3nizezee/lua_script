@@ -1041,10 +1041,22 @@ function newRemote(type, data)
     local Text = Create("TextLabel",{TextTruncate = Enum.TextTruncate.AtEnd,Name = "Text",Parent = RemoteTemplate,BackgroundTransparency = 1,Position = UDim2.new(0, 18, 0, 2),Size = UDim2.new(0, 75, 0, 26),ZIndex = 2,Font = Enum.Font.GothamMedium,Text = remote.Name,TextColor3 = Theme.TextLight,TextSize = 12,TextXAlignment = Enum.TextXAlignment.Left})
 
     -- สร้างปุ่มปักหมุด (Pin Button)
-    local PinBtn = Create("TextButton",{Name = "Pin",Parent = RemoteTemplate,BackgroundTransparency = 1,Position = UDim2.new(1, -22, 0, 2),Size = UDim2.new(0, 20, 0, 26),Font = Enum.Font.GothamBold,Text = "⭐",TextColor3 = Color3.fromRGB(255, 255, 255),TextSize = 10,ZIndex = 3})
+    -- 1. สร้างปุ่มปักหมุด (ใช้สัญลักษณ์ ★ แทนเพื่อให้ TextColor3 ทำงานได้ 100%)
+    local PinBtn = Create("TextButton",{
+        Name = "Pin",
+        Parent = RemoteTemplate,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(1, -22, 0, 2),
+        Size = UDim2.new(0, 20, 0, 26),
+        Font = Enum.Font.GothamBold,
+        Text = "★", -- เปลี่ยนมาใช้อักขระนี้
+        TextColor3 = Color3.fromRGB(255, 255, 255), -- สีเริ่มต้น: ขาว
+        TextSize = 14, -- ปรับขนาดให้พอดี
+        ZIndex = 3
+    })
 
     local log = {
-        Name = remote.Name, -- Fixed: แก้จาก remote.name เป็น remote.Name
+        Name = remote.Name, 
         Function = data.infofunc or "--Function Info is disabled",
         Remote = remote,
         DebugId = data.id,
@@ -1052,7 +1064,7 @@ function newRemote(type, data)
         args = data.args,
         Log = RemoteTemplate,
         Button = Button,
-        Blocked = data.blockcheck, -- Fixed: แก้จาก data.blocked เป็น data.blockcheck
+        Blocked = data.blockcheck,
         Source = callingscript,
         returnvalue = data.returnvalue,
         GenScript = "-- Generating, please wait...\n-- (If this message persists, the remote args are likely extremely long)",
@@ -1060,18 +1072,17 @@ function newRemote(type, data)
         Pinned = false 
     }
 
-    -- กลไกสลับสถานะการปักหมุด
+    -- 2. กลไกสลับสถานะการปักหมุด
     PinBtn.MouseButton1Click:Connect(function()
         log.Pinned = not log.Pinned
         if log.Pinned then
-            PinBtn.TextColor3 = Color3.fromRGB(255, 215, 0) -- เปลี่ยนเป็นสีเหลือง
-            RemoteTemplate.LayoutOrder = -100000 -- ดันขึ้นบนสุดทะลุทุก Layer
+            PinBtn.TextColor3 = Color3.fromRGB(255, 255, 0) -- กดปักหมุด: เปลี่ยนเป็นสีเหลือง
+            RemoteTemplate.LayoutOrder = -100000 -- ดันขึ้นบนสุด
         else
-            PinBtn.TextColor3 = Color3.fromRGB(255, 255, 255) -- คืนค่าสีขาว
-            RemoteTemplate.LayoutOrder = log.OriginalLayout -- คืนค่าตำแหน่งเดิม
+            PinBtn.TextColor3 = Color3.fromRGB(255, 255, 255) -- ยกเลิก: คืนค่าเป็นสีขาว
+            RemoteTemplate.LayoutOrder = log.OriginalLayout -- คืนตำแหน่งเดิม
         end
     end)
-
     logs[#logs + 1] = log
     local connect = Button.MouseButton1Click:Connect(function()
         logthread(running())
