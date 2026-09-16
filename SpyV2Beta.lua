@@ -2142,24 +2142,31 @@ newButton("คัดลอก Remote", function() return "คัดลอกเ�
     end
 end)
 
-newButton("รัน Code", function() return "ยิงโค้ดนี้ไปยังเซิร์ฟเวอร์" end, function()
-    local Remote = selected and selected.Remote
-    if Remote then
-        TextLabel.Text = "กำลังดำเนินการ..."
-        xpcall(function()
-            local returnvalue
-            if Remote:IsA("RemoteEvent") or Remote:IsA("UnreliableRemoteEvent") then
-                returnvalue = Remote:FireServer(unpack(selected.args))
-            elseif Remote:IsA("RemoteFunction") then
-                returnvalue = Remote:InvokeServer(unpack(selected.args))
+newButton("รัน Code", function() return "รันโค้ดทั้งหมดที่อยู่ในกล่อง (สามารถแก้ไขข้อความก่อนรันได้)" end, function()
+    -- ดึงโค้ดปัจจุบันที่อยู่ในกล่อง CodeBox มาทั้งหมด
+    local currentCode = codebox:getString()
+    
+    if currentCode and currentCode ~= "" then
+        TextLabel.Text = "[ดำเนินการ] กำลังส่งคำสั่ง..."
+        
+        -- ใช้ Sandbox Compilation จำลองการทำงานของ Executor
+        local success, err = pcall(function()
+            local func, syntaxErr = loadstring(currentCode)
+            if func then
+                func() -- สั่งรันโค้ด
+            else
+                error(tostring(syntaxErr or "โครงสร้างโค้ดไม่ถูกต้อง"))
             end
-            TextLabel.Text = ("ดำเนินการสำเร็จ!\n%s"):format(v2s(returnvalue))
-        end,function(err)
-            TextLabel.Text = ("เกิดข้อผิดพลาด!\n%s"):format(err)
         end)
-        return
+        
+        if success then
+            TextLabel.Text = "[สำเร็จ] ยิงโค้ดไปยังเซิร์ฟเวอร์แล้ว!"
+        else
+            TextLabel.Text = "[ข้อผิดพลาด] " .. tostring(err)
+        end
+    else
+        TextLabel.Text = "[ข้อผิดพลาด] ไม่พบโค้ดในกล่อง"
     end
-    TextLabel.Text = "ไม่พบแหล่งที่มา"
 end)
 
 newButton("คัดลอก Script", function() return "คัดลอกเส้นทางสคริปต์ต้นทาง\n(อาจค้นหาไม่พบเสมอไป)" end, function()
