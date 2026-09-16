@@ -1020,6 +1020,7 @@ function newButton(name, description, onClick)
 --- @param remote any
 --- @param function_info string
 --- @param blocked any
+--- Adds new Remote to logs
 function newRemote(type, data)
     if layoutOrderNum < 1 then layoutOrderNum = 999999999 end
     local remote = data.remote
@@ -1040,7 +1041,6 @@ function newRemote(type, data)
     -- หดความกว้าง TextLabel (จาก 95 เป็น 75) เพื่อเว้นพื้นที่ให้ปุ่มดาว
     local Text = Create("TextLabel",{TextTruncate = Enum.TextTruncate.AtEnd,Name = "Text",Parent = RemoteTemplate,BackgroundTransparency = 1,Position = UDim2.new(0, 18, 0, 2),Size = UDim2.new(0, 75, 0, 26),ZIndex = 2,Font = Enum.Font.GothamMedium,Text = remote.Name,TextColor3 = Theme.TextLight,TextSize = 12,TextXAlignment = Enum.TextXAlignment.Left})
 
-    -- สร้างปุ่มปักหมุด (Pin Button)
     -- 1. สร้างปุ่มปักหมุด (ใช้สัญลักษณ์ ★ แทนเพื่อให้ TextColor3 ทำงานได้ 100%)
     local PinBtn = Create("TextButton",{
         Name = "Pin",
@@ -1049,9 +1049,9 @@ function newRemote(type, data)
         Position = UDim2.new(1, -22, 0, 2),
         Size = UDim2.new(0, 20, 0, 26),
         Font = Enum.Font.GothamBold,
-        Text = "★", -- เปลี่ยนมาใช้อักขระนี้
+        Text = "★", -- สัญลักษณ์ดาวทึบ
         TextColor3 = Color3.fromRGB(255, 255, 255), -- สีเริ่มต้น: ขาว
-        TextSize = 14, -- ปรับขนาดให้พอดี
+        TextSize = 14,
         ZIndex = 3
     })
 
@@ -1083,7 +1083,9 @@ function newRemote(type, data)
             RemoteTemplate.LayoutOrder = log.OriginalLayout -- คืนตำแหน่งเดิม
         end
     end)
+    
     logs[#logs + 1] = log
+    
     local connect = Button.MouseButton1Click:Connect(function()
         logthread(running())
         eventSelect(RemoteTemplate)
@@ -1095,6 +1097,7 @@ function newRemote(type, data)
             eventSelect(RemoteTemplate)
         end
     end)
+    
     layoutOrderNum -= 1
     table.insert(remoteLogs, 1, {connect, RemoteTemplate})
     clean()
