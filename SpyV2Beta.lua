@@ -2162,7 +2162,7 @@ newButton("รัน Code", function() return "ยิงโค้ดนี้ไ
     TextLabel.Text = "ไม่พบแหล่งที่มา"
 end)
 
-newButton("รับ Script", function() return "คัดลอกเส้นทางสคริปต์ต้นทาง\n(อาจค้นหาไม่พบเสมอไป)" end, function()
+newButton("คัดลอก Script", function() return "คัดลอกเส้นทางสคริปต์ต้นทาง\n(อาจค้นหาไม่พบเสมอไป)" end, function()
     if selected then
         if not selected.Source then
             selected.Source = rawget(getfenv(selected.Function),"script")
