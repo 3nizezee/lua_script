@@ -2283,38 +2283,3 @@ if configs.supersecretdevtoggle then
         NotSound:Play()
     end)
             end
-
-            -- [CFrame Spy] ระบบดักจับพิกัด Teleport แบบ First-Principles
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local oldNewIndex
-oldNewIndex = hookmetamethod(game, "__newindex", newcclosure(function(t, k, v)
-    -- ดักจับการแก้ไขค่า CFrame หรือ Position โดยสคริปต์ของเกม (ไม่นับ Exploit)
-    if not checkcaller() and (k == "CFrame" or k == "Position") then
-        local char = LocalPlayer.Character
-        if char and t == char:FindFirstChild("HumanoidRootPart") then
-            
-            -- คำนวณระยะทางเพื่อแยกแยะระหว่าง "การเดินปกติ" กับ "การเทเลพอร์ต"
-            local currentPos = t.Position
-            local newPos = typeof(v) == "CFrame" and v.Position or v
-            local distance = (currentPos - newPos).Magnitude
-            
-            -- กรอง (Filter): ถ้าขยับไกลกว่า 30 Studs ในเฟรมเดียว ถือว่าเป็น Teleport แน่นอน
-            if distance > 30 then
-                local formattedCoord = "CFrame.new(" .. tostring(v) .. ")"
-                
-                -- แจ้งเตือนลง F9 (Developer Console)
-                warn("🔴 [CFrame Spy] ตรวจพบการ Teleport!")
-                warn("ระยะทาง: " .. math.floor(distance) .. " Studs")
-                warn("พิกัดเป้าหมาย: " .. formattedCoord)
-                
-                -- คัดลอกพิกัดลงคลิปบอร์ดอัตโนมัติ เพื่อนำไปเขียนบอทต่อ
-                setclipboard(formattedCoord)
-            end
-        end
-    end
-    return oldNewIndex(t, k, v)
-end))
-
-print("🟢 CFrame Spy ทำงานแล้ว! ลองกดปุ่ม Teleport ในเกมดู")
