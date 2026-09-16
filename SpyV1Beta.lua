@@ -2294,6 +2294,7 @@ newButton("เข้าร่วม Discord",function() return "เข้าร�
     end
 end)
 
+            
 if configs.supersecretdevtoggle then
     newButton("Load V1",function() return "โหลดเวอร์ชัน 1" end, function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com"))()
