@@ -232,28 +232,57 @@ pcall(function()
     LazyFix = loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/Roblox/refs/heads/main/Lua/Libraries/DataToCode/DataToCode.luau"))()
 end)
   
+local Theme = {
+    MainBG = Color3.fromRGB(15, 15, 18),
+    PanelBG = Color3.fromRGB(20, 20, 25),
+    CodeBG = Color3.fromRGB(12, 12, 15),
+    TopBar = Color3.fromRGB(15, 15, 18),
+    Accent = Color3.fromRGB(230, 40, 40), -- Crimson Red
+    ButtonBG = Color3.fromRGB(32, 32, 38),
+    ButtonHover = Color3.fromRGB(45, 45, 55),
+    TextDark = Color3.fromRGB(180, 180, 190),
+    TextLight = Color3.fromRGB(240, 240, 245),
+    CornerRadius = UDim.new(0, 6)
+}
 
-local SimpleSpy3 = Create("ScreenGui",{ResetOnSpawn = false})
+local SimpleSpy3 = Create("ScreenGui",{ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling})
 local Storage = Create("Folder",{})
-local Background = Create("Frame",{Parent = SimpleSpy3,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 500, 0, 200),Size = UDim2.new(0, 450, 0, 268)})
-local LeftPanel = Create("Frame",{Parent = Background,BackgroundColor3 = Color3.fromRGB(53, 52, 55),BorderSizePixel = 0,Position = UDim2.new(0, 0, 0, 19),Size = UDim2.new(0, 131, 0, 249)})
-local LogList = Create("ScrollingFrame",{Parent = LeftPanel,Active = true,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,BorderSizePixel = 0,Position = UDim2.new(0, 0, 0, 9),Size = UDim2.new(0, 131, 0, 232),CanvasSize = UDim2.new(0, 0, 0, 0),ScrollBarThickness = 4})
-local UIListLayout = Create("UIListLayout",{Parent = LogList,HorizontalAlignment = Enum.HorizontalAlignment.Center,SortOrder = Enum.SortOrder.LayoutOrder})
-local RightPanel = Create("Frame",{Parent = Background,BackgroundColor3 = Color3.fromRGB(37, 36, 38),BorderSizePixel = 0,Position = UDim2.new(0, 131, 0, 19),Size = UDim2.new(0, 319, 0, 249)})
-local CodeBox = Create("Frame",{Parent = RightPanel,BackgroundColor3 = Color3.new(0.0823529, 0.0745098, 0.0784314),BorderSizePixel = 0,Size = UDim2.new(0, 319, 0, 119)})
-local ScrollingFrame = Create("ScrollingFrame",{Parent = RightPanel,Active = true,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 0, 0.5, 0),Size = UDim2.new(1, 0, 0.5, -9),CanvasSize = UDim2.new(0, 0, 0, 0),ScrollBarThickness = 4})
-local UIGridLayout = Create("UIGridLayout",{Parent = ScrollingFrame,HorizontalAlignment = Enum.HorizontalAlignment.Center,SortOrder = Enum.SortOrder.LayoutOrder,CellPadding = UDim2.new(0, 0, 0, 0),CellSize = UDim2.new(0, 94, 0, 27)})
-local TopBar = Create("Frame",{Parent = Background,BackgroundColor3 = Color3.fromRGB(37, 35, 38),BorderSizePixel = 0,Size = UDim2.new(0, 450, 0, 19)})
-local Simple = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Color3.new(1, 1, 1),AutoButtonColor = false,BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 0),Size = UDim2.new(0, 57, 0, 18),Font = Enum.Font.SourceSansBold,Text =  "FeemSPY V1-Beta",TextColor3 = Color3.new(1, 1, 1),TextSize = 14,TextXAlignment = Enum.TextXAlignment.Left})
-local CloseButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Color3.new(0.145098, 0.141176, 0.14902),BorderSizePixel = 0,Position = UDim2.new(1, -19, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
-local ImageLabel = Create("ImageLabel",{Parent = CloseButton,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 5),Size = UDim2.new(0, 9, 0, 9),Image = "http://www.roblox.com/asset/?id=5597086202"})
-local MaximizeButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Color3.new(0.145098, 0.141176, 0.14902),BorderSizePixel = 0,Position = UDim2.new(1, -38, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
-local ImageLabel_2 = Create("ImageLabel",{Parent = MaximizeButton,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 5),Size = UDim2.new(0, 9, 0, 9),Image = "http://www.roblox.com/asset/?id=5597108117"})
-local MinimizeButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Color3.new(0.145098, 0.141176, 0.14902),BorderSizePixel = 0,Position = UDim2.new(1, -57, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
-local ImageLabel_3 = Create("ImageLabel",{Parent = MinimizeButton,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 5),Size = UDim2.new(0, 9, 0, 9),Image = "http://www.roblox.com/asset/?id=5597105827"})
 
-local ToolTip = Create("Frame",{Parent = SimpleSpy3,BackgroundColor3 = Color3.fromRGB(26, 26, 26),BackgroundTransparency = 0.1,BorderColor3 = Color3.new(1, 1, 1),Size = UDim2.new(0, 200, 0, 50),ZIndex = 3,Visible = false})
-local TextLabel = Create("TextLabel",{Parent = ToolTip,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 2, 0, 2),Size = UDim2.new(0, 196, 0, 46),ZIndex = 3,Font = Enum.Font.SourceSans,Text = "This is some slightly longer text.",TextColor3 = Color3.new(1, 1, 1),TextSize = 14,TextWrapped = true,TextXAlignment = Enum.TextXAlignment.Left,TextYAlignment = Enum.TextYAlignment.Top})
+local Background = Create("Frame",{Parent = SimpleSpy3,BackgroundColor3 = Theme.MainBG,BorderSizePixel = 0,Position = UDim2.new(0, 500, 0, 200),Size = UDim2.new(0, 450, 0, 268)})
+Create("UICorner", {CornerRadius = Theme.CornerRadius, Parent = Background})
+Create("UIStroke", {Color = Theme.Accent, Thickness = 1.5, Transparency = 0.4, Parent = Background})
+
+local LeftPanel = Create("Frame",{Parent = Background,BackgroundColor3 = Theme.PanelBG,BorderSizePixel = 0,Position = UDim2.new(0, 0, 0, 19),Size = UDim2.new(0, 131, 0, 249)})
+Create("UICorner", {CornerRadius = Theme.CornerRadius, Parent = LeftPanel})
+
+local LogList = Create("ScrollingFrame",{Parent = LeftPanel,Active = true,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,BorderSizePixel = 0,Position = UDim2.new(0, 0, 0, 9),Size = UDim2.new(0, 131, 0, 232),CanvasSize = UDim2.new(0, 0, 0, 0),ScrollBarThickness = 2, ScrollBarImageColor3 = Theme.Accent})
+local UIListLayout = Create("UIListLayout",{Parent = LogList,HorizontalAlignment = Enum.HorizontalAlignment.Center,SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 2)})
+
+local RightPanel = Create("Frame",{Parent = Background,BackgroundColor3 = Theme.PanelBG,BorderSizePixel = 0,Position = UDim2.new(0, 131, 0, 19),Size = UDim2.new(0, 319, 0, 249)})
+Create("UICorner", {CornerRadius = Theme.CornerRadius, Parent = RightPanel})
+
+local CodeBox = Create("Frame",{Parent = RightPanel,BackgroundColor3 = Theme.CodeBG,BorderSizePixel = 0,Size = UDim2.new(0, 319, 0, 119)})
+Create("UICorner", {CornerRadius = Theme.CornerRadius, Parent = CodeBox})
+
+local ScrollingFrame = Create("ScrollingFrame",{Parent = RightPanel,Active = true,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 0, 0.5, 0),Size = UDim2.new(1, 0, 0.5, -9),CanvasSize = UDim2.new(0, 0, 0, 0),ScrollBarThickness = 2, ScrollBarImageColor3 = Theme.Accent})
+local UIGridLayout = Create("UIGridLayout",{Parent = ScrollingFrame,HorizontalAlignment = Enum.HorizontalAlignment.Center,SortOrder = Enum.SortOrder.LayoutOrder,CellPadding = UDim2.new(0, 6, 0, 6),CellSize = UDim2.new(0, 94, 0, 27)})
+
+local TopBar = Create("Frame",{Parent = Background,BackgroundColor3 = Theme.TopBar,BorderSizePixel = 0,Size = UDim2.new(0, 450, 0, 19)})
+Create("UICorner", {CornerRadius = Theme.CornerRadius, Parent = TopBar})
+Create("Frame", {Parent = TopBar, BackgroundColor3 = Theme.TopBar, BorderSizePixel = 0, Position = UDim2.new(0,0,1,-6), Size = UDim2.new(1,0,0,6)}) 
+
+local Simple = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Color3.new(1, 1, 1),AutoButtonColor = false,BackgroundTransparency = 1,Position = UDim2.new(0, 10, 0, 0),Size = UDim2.new(0, 57, 0, 18),Font = Enum.Font.GothamBold,Text =  "FeemSpy ตัวดักจับ",TextColor3 = Theme.TextLight,TextSize = 12,TextXAlignment = Enum.TextXAlignment.Left})
+local CloseButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Theme.TopBar,BorderSizePixel = 0,Position = UDim2.new(1, -19, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
+local ImageLabel = Create("ImageLabel",{Parent = CloseButton,BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 5),Size = UDim2.new(0, 9, 0, 9),Image = "http://www.roblox.com/asset/?id=5597086202", ImageColor3 = Theme.TextDark})
+local MaximizeButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Theme.TopBar,BorderSizePixel = 0,Position = UDim2.new(1, -38, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
+local ImageLabel_2 = Create("ImageLabel",{Parent = MaximizeButton,BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 5),Size = UDim2.new(0, 9, 0, 9),Image = "http://www.roblox.com/asset/?id=5597108117", ImageColor3 = Theme.TextDark})
+local MinimizeButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Theme.TopBar,BorderSizePixel = 0,Position = UDim2.new(1, -57, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
+local ImageLabel_3 = Create("ImageLabel",{Parent = MinimizeButton,BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 5),Size = UDim2.new(0, 9, 0, 9),Image = "http://www.roblox.com/asset/?id=5597105827", ImageColor3 = Theme.TextDark})
+
+local ToolTip = Create("Frame",{Parent = SimpleSpy3,BackgroundColor3 = Theme.MainBG,BackgroundTransparency = 0.05,BorderSizePixel = 0,Size = UDim2.new(0, 200, 0, 50),ZIndex = 5,Visible = false})
+Create("UICorner", {CornerRadius = Theme.CornerRadius, Parent = ToolTip})
+Create("UIStroke", {Color = Theme.Accent, Thickness = 1, Parent = ToolTip})
+local TextLabel = Create("TextLabel",{Parent = ToolTip,BackgroundTransparency = 1,Position = UDim2.new(0, 6, 0, 6),Size = UDim2.new(0, 188, 0, 38),ZIndex = 5,Font = Enum.Font.GothamMedium,Text = "",TextColor3 = Theme.TextLight,TextSize = 12,TextWrapped = true,TextXAlignment = Enum.TextXAlignment.Left,TextYAlignment = Enum.TextYAlignment.Top})
 
 -------------------------------------------------------------------------------
 
@@ -421,28 +450,7 @@ function scaleToolTip()
 end
 
 --- Executed when the toggle button (the SimpleSpy logo) is hovered over
-function onToggleButtonHover()
-    if not toggle then
-        TweenService:Create(Simple, TweenInfo.new(0.5), {TextColor3 = Color3.fromRGB(252, 51, 51)}):Play()
-    else
-        TweenService:Create(Simple, TweenInfo.new(0.5), {TextColor3 = Color3.fromRGB(68, 206, 91)}):Play()
-    end
-end
 
---- Executed when the toggle button is unhovered over
-function onToggleButtonUnhover()
-    TweenService:Create(Simple, TweenInfo.new(0.5), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-end
-
---- Executed when the X button is hovered over
-function onXButtonHover()
-    TweenService:Create(CloseButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 60, 60)}):Play()
-end
-
---- Executed when the X button is unhovered over
-function onXButtonUnhover()
-    TweenService:Create(CloseButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(37, 36, 38)}):Play()
-end
 
 --- Toggles the remote spy method (when button clicked)
 function onToggleButtonClick()
