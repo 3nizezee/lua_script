@@ -611,6 +611,7 @@ function fadeOut(elements)
     end
     end
 --- Expands and minimizes the gui (closed is the toggle boolean)
+--- Expands and minimizes the gui (closed is the toggle boolean)
 function toggleMinimize(override)
     if mainClosing and not override or maximized then
         return
@@ -624,9 +625,17 @@ function toggleMinimize(override)
         LeftPanel.Visible = true
         remotesFadeIn = fadeOut(LeftPanel:GetDescendants())
         TweenService:Create(LeftPanel, TweenInfo.new(0.5), {Size = UDim2.new(0, 131, 0, 0)}):Play()
+        
+        -- 🔴 ซ่อนชื่อ UI พร้อมเฟดออก (Fade Out)
+        TweenService:Create(Simple, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+        
         wait(0.5)
     else
         TweenService:Create(LeftPanel, TweenInfo.new(0.5), {Size = UDim2.new(0, 131, 0, 249)}):Play()
+        
+        -- 🟢 แสดงชื่อ UI พร้อมเฟดกลับมา (Fade In)
+        TweenService:Create(Simple, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
+        
         wait(0.5)
         if remotesFadeIn then
             remotesFadeIn()
@@ -635,7 +644,7 @@ function toggleMinimize(override)
         bringBackOnResize()
     end
     mainClosing = false
-end
+    end
 
 --- Expands and minimizes the sidebar (sideClosed is the toggle boolean)
 function toggleSideTray(override)
@@ -770,30 +779,34 @@ function mouseMoved()
 end
 
 --- Adjusts the ui elements to the 'Maximized' size
+--- Adjusts the ui elements to the 'Maximized' size
 function maximizeSize(speed)
-    if not speed then
-        speed = 0.05
-    end
+    if not speed then speed = 0.05 end
     TweenService:Create(LeftPanel, TweenInfo.new(speed), { Size = UDim2.fromOffset(LeftPanel.AbsoluteSize.X, Background.AbsoluteSize.Y - TopBar.AbsoluteSize.Y) }):Play()
     TweenService:Create(RightPanel, TweenInfo.new(speed), { Size = UDim2.fromOffset(Background.AbsoluteSize.X - LeftPanel.AbsoluteSize.X, Background.AbsoluteSize.Y - TopBar.AbsoluteSize.Y) }):Play()
     TweenService:Create(TopBar, TweenInfo.new(speed), { Size = UDim2.fromOffset(Background.AbsoluteSize.X, TopBar.AbsoluteSize.Y) }):Play()
     TweenService:Create(ScrollingFrame, TweenInfo.new(speed), { Size = UDim2.fromOffset(Background.AbsoluteSize.X - LeftPanel.AbsoluteSize.X, 110), Position = UDim2.fromOffset(0, Background.AbsoluteSize.Y - 119 - TopBar.AbsoluteSize.Y) }):Play()
     TweenService:Create(CodeBox, TweenInfo.new(speed), { Size = UDim2.fromOffset(Background.AbsoluteSize.X - LeftPanel.AbsoluteSize.X, Background.AbsoluteSize.Y - 119 - TopBar.AbsoluteSize.Y) }):Play()
     TweenService:Create(LogList, TweenInfo.new(speed), { Size = UDim2.fromOffset(LogList.AbsoluteSize.X, Background.AbsoluteSize.Y - TopBar.AbsoluteSize.Y - 18) }):Play()
-end
+    
+    -- 🟢 แสดงชื่อเมื่อขยายแผงด้านข้าง
+    TweenService:Create(Simple, TweenInfo.new(speed), {TextTransparency = 0}):Play()
+    end
 
 --- Adjusts the ui elements to close the side
+--- Adjusts the ui elements to close the side
 function minimizeSize(speed)
-    if not speed then
-        speed = 0.05
-    end
+    if not speed then speed = 0.05 end
     TweenService:Create(LeftPanel, TweenInfo.new(speed), { Size = UDim2.fromOffset(LeftPanel.AbsoluteSize.X, Background.AbsoluteSize.Y - TopBar.AbsoluteSize.Y) }):Play()
     TweenService:Create(RightPanel, TweenInfo.new(speed), { Size = UDim2.fromOffset(0, Background.AbsoluteSize.Y - TopBar.AbsoluteSize.Y) }):Play()
     TweenService:Create(TopBar, TweenInfo.new(speed), { Size = UDim2.fromOffset(LeftPanel.AbsoluteSize.X, TopBar.AbsoluteSize.Y) }):Play()
     TweenService:Create(ScrollingFrame, TweenInfo.new(speed), { Size = UDim2.fromOffset(0, 119), Position = UDim2.fromOffset(0, Background.AbsoluteSize.Y - 119 - TopBar.AbsoluteSize.Y) }):Play()
     TweenService:Create(CodeBox, TweenInfo.new(speed), { Size = UDim2.fromOffset(0, Background.AbsoluteSize.Y - 119 - TopBar.AbsoluteSize.Y) }):Play()
     TweenService:Create(LogList, TweenInfo.new(speed), { Size = UDim2.fromOffset(LogList.AbsoluteSize.X, Background.AbsoluteSize.Y - TopBar.AbsoluteSize.Y - 18) }):Play()
-end
+    
+    -- 🔴 ซ่อนชื่อเมื่อพับแผงด้านข้าง
+    TweenService:Create(Simple, TweenInfo.new(speed), {TextTransparency = 1}):Play()
+    end
 
 --- Ensures size is within screensize limitations
 function validateSize()
