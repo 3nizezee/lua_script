@@ -2404,7 +2404,63 @@ newButton("รันอัตโนมัติ", function() return "เปิ�
     end
 end)
         
+newButton("พิกัด", function() return "คัดลอกพิกัดปัจจุบันและสร้างโค้ดบิน (Tween) ไปยังจุดนี้" end, function()
+    local player = game:GetService("Players").LocalPlayer
+    local char = player.Character
+    
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local hrp = char.HumanoidRootPart
+        local pos = hrp.CFrame
+        
+        -- ดึงค่า CFrame แบบเต็มรูปแบบ (พิกัด X,Y,Z และองศาการหันหน้า)
+        local cframeStr = string.format("CFrame.new(%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)", pos:GetComponents())
+        
+        -- คัดลอกลง Clipboard
+        setclipboard(cframeStr)
+        
+        -- สร้างโค้ดบินทะลุกำแพง (Universal Tween Fly) ลงใน CodeBox
+        local scriptGen = "-- สคริปต์บิน (Tween) ไปยังพิกัดเป้าหมาย (ใช้ได้ทุกแมพ)\n"
+        scriptGen = scriptGen .. "local speed = 50 -- ปรับความเร็วที่นี่ (Studs ต่อวินาที)\n"
+        scriptGen = scriptGen .. "local target = " .. cframeStr .. "\n\n"
+        scriptGen = scriptGen .. [[local char = game:GetService("Players").LocalPlayer.Character
+local hrp = char and char:FindFirstChild("HumanoidRootPart")
 
+if hrp then
+    -- คำนวณระยะเวลาเดินทางแบบไดนามิก (ระยะทาง / ความเร็ว)
+    local dist = (hrp.Position - target.Position).Magnitude
+    local timeToReach = dist / speed
+    
+    local tween = game:GetService("TweenService"):Create(
+        hrp, 
+        TweenInfo.new(timeToReach, Enum.EasingStyle.Linear), 
+        {CFrame = target}
+    )
+    
+    -- ปิดการชน (Noclip) ชั่วคราวเพื่อบินเป็นเส้นตรงทะลุกำแพง
+    for _, v in pairs(char:GetDescendants()) do
+        if v:IsA("BasePart") then v.CanCollide = false end
+    end
+    
+    -- ล็อกตัวละครไม่ให้ร่วงจากแรงโน้มถ่วงระหว่างบิน
+    local anchorState = hrp.Anchored
+    hrp.Anchored = true
+    
+    tween:Play()
+    tween.Completed:Wait()
+    
+    -- คืนค่าฟิสิกส์ทั้งหมดกลับเป็นปกติ
+    hrp.Anchored = anchorState
+    for _, v in pairs(char:GetDescendants()) do
+        if v:IsA("BasePart") then v.CanCollide = true end
+    end
+end]]
+        codebox:setRaw(scriptGen)
+        TextLabel.Text = "[สำเร็จ] คัดลอกพิกัดและสร้างโค้ดแล้ว!"
+    else
+        TextLabel.Text = "[ข้อผิดพลาด] ไม่พบแกนกลางตัวละคร (HumanoidRootPart)"
+    end
+end)
+            
 if configs.supersecretdevtoggle then
     newButton("Load V1",function() return "โหลดเวอร์ชัน 1" end, function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com"))()
