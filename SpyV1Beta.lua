@@ -225,11 +225,17 @@ end
 local Highlight = { new = function() return { setRaw = function() end, getString = function() return "" end } end }
 local LazyFix = { Convert = function(a) return tostring(a) end, ConvertKnown = function(a,b) return "game" end }
 
-pcall(function()
-    Highlight = (isfile and loadfile and isfile("Highlight.lua") and loadfile("Highlight.lua")()) or loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/Highlight.lua"))()
+-- ใช้ task.spawn เพื่อให้สคริปต์รัน UI ได้ทันทีโดยไม่ต้องรอโหลดไฟล์จากเน็ต
+task.spawn(function()
+    pcall(function()
+        Highlight = (isfile and loadfile and isfile("Highlight.lua") and loadfile("Highlight.lua")()) or loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/Highlight.lua"))()
+    end)
 end)
-pcall(function()
-    LazyFix = loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/Roblox/refs/heads/main/Lua/Libraries/DataToCode/DataToCode.luau"))()
+
+task.spawn(function()
+    pcall(function()
+        LazyFix = loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/Roblox/refs/heads/main/Lua/Libraries/DataToCode/DataToCode.luau"))()
+    end)
 end)
   
 local Theme = {
@@ -1040,25 +1046,14 @@ function newRemote(type, data)
     local Text = Create("TextLabel",{TextTruncate = Enum.TextTruncate.AtEnd,Name = "Text",Parent = RemoteTemplate,BackgroundTransparency = 1,Position = UDim2.new(0, 18, 0, 2),Size = UDim2.new(0, 75, 0, 26),ZIndex = 2,Font = Enum.Font.GothamMedium,Text = remote.Name,TextColor3 = Theme.TextLight,TextSize = 12,TextXAlignment = Enum.TextXAlignment.Left})
 
     -- [เพิ่ม] สร้างปุ่มรูปดาวสำหรับปักหมุด
+    local blocked = data.blockcheck -- [เพิ่ม] กู้คืนตัวแปรนี้กลับมา ป้องกันบัคเวลาบล็อก Remote
+    
+    -- สร้างปุ่มรูปดาวสำหรับปักหมุด
     local PinBtn = Create("TextButton",{Name = "Pin",Parent = RemoteTemplate,BackgroundTransparency = 1,Position = UDim2.new(1, -22, 0, 2),Size = UDim2.new(0, 20, 0, 26),Font = Enum.Font.GothamBold,Text = "⭐",TextColor3 = Color3.fromRGB(255, 255, 255),TextSize = 10,ZIndex = 3})
 
     local log = {
-        Name = remote.name,
+        Name = remote.Name, -- [แก้] ตัว N ต้องเป็นพิมพ์ใหญ่เท่านั้น! (Roblox API)
         Function = data.infofunc or "--Function Info is disabled",
-        Remote = remote,
-        DebugId = data.id,
-        metamethod = data.metamethod,
-        args = data.args,
-        Log = RemoteTemplate,
-        Button = Button,
-        Blocked = data.blocked,
-        Source = callingscript,
-        returnvalue = data.returnvalue,
-        GenScript = "-- Generating, please wait...\n-- (If this message persists, the remote args are likely extremely long)",
-        -- [เพิ่ม] 2 ค่านี้สำหรับระบบปักหมุด
-        OriginalLayout = originalLayout,
-        Pinned = false 
-    }
 
     -- [เพิ่ม] ลอจิกทำงานเมื่อกดปุ่มดาว
     PinBtn.MouseButton1Click:Connect(function()
