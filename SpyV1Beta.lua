@@ -2128,14 +2128,14 @@ newButton("เคลียร์ Logs", function() return "ล้างประ
     TextLabel.Text = "ล้างประวัติสำเร็จ!"
 end)
 
-newButton("Exclude (i)", function() return "ซ่อน Remote นี้ (ID)\nยังใช้งานได้ แต่ไม่แสดงบน UI" end, function()
+newButton("ยกเว้น(i)", function() return "ซ่อน Remote นี้ (ID)\nยังใช้งานได้ แต่ไม่แสดงบน UI" end, function()
     if selected then
         blacklist[OldDebugId(selected.Remote)] = true
         TextLabel.Text = "ซ่อนแล้ว!"
     end
 end)
 
-newButton("Exclude (n)", function() return "ซ่อน Remote นี้ (ชื่อ)\nยังใช้งานได้ แต่ไม่แสดงบน UI" end, function()
+newButton("ยกเว้น(n)", function() return "ซ่อน Remote นี้ (ชื่อ)\nยังใช้งานได้ แต่ไม่แสดงบน UI" end, function()
     if selected then
         blacklist[selected.Name] = true
         TextLabel.Text = "ซ่อนแล้ว!"
@@ -2147,14 +2147,14 @@ newButton("เคลียร์ Blacklist", function() return "ล้างร�
     TextLabel.Text = "ล้างรายการซ่อนสำเร็จ!"
 end)
 
-newButton("บล็อก (i)", function() return "บล็อก Remote นี้ (ID)\nแสดงบน UI แต่ห้ามยิงไปเซิร์ฟเวอร์" end, function()
+newButton("บล็อก(i)", function() return "บล็อก Remote นี้ (ID)\nแสดงบน UI แต่ห้ามยิงไปเซิร์ฟเวอร์" end, function()
     if selected then
         blocklist[OldDebugId(selected.Remote)] = true
         TextLabel.Text = "บล็อกสำเร็จ!"
     end
 end)
 
-newButton("บล็อก (n)",function() return "บล็อก Remote นี้ (ชื่อ)\nแสดงบน UI แต่ห้ามยิงไปเซิร์ฟเวอร์" end, function()
+newButton("บล็อก(n)",function() return "บล็อก Remote นี้ (ชื่อ)\nแสดงบน UI แต่ห้ามยิงไปเซิร์ฟเวอร์" end, function()
     if selected then
         blocklist[selected.Name] = true
         TextLabel.Text = "บล็อกสำเร็จ!"
@@ -2204,7 +2204,7 @@ newButton("บล็อกอัตโนมัติ", function() return string
     excluding = {}
 end)
 
-newButton("ผู้เรียกตรวจสอบบันทึก",function() return ("[%s] ดักเฉพาะ Remote ที่ถูกเรียกโดยสคริปต์"):format(configs.logcheckcaller and "เปิดใช้งาน" or "ปิดใช้งาน") end, function()
+newButton("ผู้เรียก log",function() return ("[%s] ดักเฉพาะ Remote ที่ถูกเรียกโดยสคริปต์"):format(configs.logcheckcaller and "เปิดใช้งาน" or "ปิดใช้งาน") end, function()
     configs.logcheckcaller = not configs.logcheckcaller
     TextLabel.Text = ("[%s] โหมดเฉพาะสคริปต์"):format(configs.logcheckcaller and "เปิดใช้งาน" or "ปิดใช้งาน")
 end)
