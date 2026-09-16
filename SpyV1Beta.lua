@@ -1023,6 +1023,7 @@ function newRemote(type, data)
     if layoutOrderNum < 1 then layoutOrderNum = 999999999 end
     local remote = data.remote
     local callingscript = data.callingscript
+    local originalLayout = layoutOrderNum -- [เพิ่ม] เก็บค่าลำดับเดิมไว้ก่อน
     
     local accentColor = (type == "event" and Color3.fromRGB(230, 40, 40)) or Color3.fromRGB(150, 60, 255)
 
@@ -1035,7 +1036,11 @@ function newRemote(type, data)
     local ColorBar = Create("Frame",{Name = "ColorBar",Parent = RemoteTemplate,BackgroundColor3 = accentColor,BorderSizePixel = 0,Position = UDim2.new(0, 10, 0, 9),Size = UDim2.new(0, 3, 0, 12),ZIndex = 2})
     Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = ColorBar})
     
-    local Text = Create("TextLabel",{TextTruncate = Enum.TextTruncate.AtEnd,Name = "Text",Parent = RemoteTemplate,BackgroundTransparency = 1,Position = UDim2.new(0, 18, 0, 2),Size = UDim2.new(0, 95, 0, 26),ZIndex = 2,Font = Enum.Font.GothamMedium,Text = remote.Name,TextColor3 = Theme.TextLight,TextSize = 12,TextXAlignment = Enum.TextXAlignment.Left})
+    -- [แก้] ลดขนาดความกว้างจาก 95 เป็น 75 เพื่อเว้นที่ให้ปุ่มรูปดาว
+    local Text = Create("TextLabel",{TextTruncate = Enum.TextTruncate.AtEnd,Name = "Text",Parent = RemoteTemplate,BackgroundTransparency = 1,Position = UDim2.new(0, 18, 0, 2),Size = UDim2.new(0, 75, 0, 26),ZIndex = 2,Font = Enum.Font.GothamMedium,Text = remote.Name,TextColor3 = Theme.TextLight,TextSize = 12,TextXAlignment = Enum.TextXAlignment.Left})
+
+    -- [เพิ่ม] สร้างปุ่มรูปดาวสำหรับปักหมุด
+    local PinBtn = Create("TextButton",{Name = "Pin",Parent = RemoteTemplate,BackgroundTransparency = 1,Position = UDim2.new(1, -22, 0, 2),Size = UDim2.new(0, 20, 0, 26),Font = Enum.Font.GothamBold,Text = "⭐",TextColor3 = Color3.fromRGB(255, 255, 255),TextSize = 10,ZIndex = 3})
 
     local log = {
         Name = remote.name,
@@ -1049,9 +1054,25 @@ function newRemote(type, data)
         Blocked = data.blocked,
         Source = callingscript,
         returnvalue = data.returnvalue,
-        GenScript = "-- Generating, please wait...\n-- (If this message persists, the remote args are likely extremely long)"
+        GenScript = "-- Generating, please wait...\n-- (If this message persists, the remote args are likely extremely long)",
+        -- [เพิ่ม] 2 ค่านี้สำหรับระบบปักหมุด
+        OriginalLayout = originalLayout,
+        Pinned = false 
     }
 
+    -- [เพิ่ม] ลอจิกทำงานเมื่อกดปุ่มดาว
+    PinBtn.MouseButton1Click:Connect(function()
+        log.Pinned = not log.Pinned
+        if log.Pinned then
+            PinBtn.TextColor3 = Color3.fromRGB(255, 215, 0) -- เปลี่ยนเป็นสีเหลืองทอง
+            RemoteTemplate.LayoutOrder = -10000 -- ดันขึ้นบนสุด (เลขยิ่งติดลบยิ่งอยู่บน)
+        else
+            PinBtn.TextColor3 = Color3.fromRGB(255, 255, 255) -- กลับเป็นสีขาว
+            RemoteTemplate.LayoutOrder = log.OriginalLayout -- กลับไปลำดับเดิมที่บันทึกไว้
+        end
+    end)
+
+    -- โค้ดส่วนท้ายดั้งเดิมของคุณทั้งหมด (ไม่ถูกปรับแก้)
     logs[#logs + 1] = log
     local connect = Button.MouseButton1Click:Connect(function()
         logthread(running())
@@ -1068,7 +1089,7 @@ function newRemote(type, data)
     table.insert(remoteLogs, 1, {connect, RemoteTemplate})
     clean()
     updateRemoteCanvas()
-end
+        end
 
 --- Generates a script from the provided arguments (first has to be remote path)
 function genScript(remote, args)
@@ -2163,14 +2184,24 @@ newButton("ข้อมูลฟังก์ชัน",function() return "ดู
     end
 end)
 
-newButton("เคลียร์ Logs", function() return "ล้างประวัติที่ดักจับทั้งหมด" end, function()
+newButton("เคลียร์ Logs", function() return "ล้างประวัติที่ไม่ได้ปักหมุด" end, function()
     TextLabel.Text = "กำลังล้างข้อมูล..."
-    clear(logs)
-    for i,v in next, LogList:GetChildren() do
-        if not v:IsA("UIListLayout") then v:Destroy() end
+    local keepLogs = {}
+    
+    for i, v in pairs(logs) do
+        if v.Pinned then
+            table.insert(keepLogs, v) -- เก็บตัวที่ปักหมุดไว้
+        else
+            if v.Log then v.Log:Destroy() end -- ทำลาย UI ตัวที่ไม่ได้ปักหมุด
+        end
     end
-    codebox:setRaw("")
-    selected = nil
+    
+    logs = keepLogs -- อัปเดตตารางให้เหลือแค่อันที่ปักหมุด
+    
+    if not (selected and selected.Pinned) then
+        selected = nil
+        codebox:setRaw("")
+    end
     TextLabel.Text = "ล้างประวัติสำเร็จ!"
 end)
 
@@ -2265,6 +2296,71 @@ newButton("เข้าร่วม Discord",function() return "เข้าร�
     TextLabel.Text = "คัดลอกลิงก์สำเร็จ!"
     if request then
         request({Url = 'http://127.0.0.1:6463/rpc?v=1',Method = 'POST',Headers = {['Content-Type'] = 'application/json', Origin = 'https://discord.com'},Body = http:JSONEncode({cmd = 'INVITE_BROWSER',nonce = http:GenerateGUID(false),args = {code = 'ไม่มี'}})})
+    end
+end)
+
+            ----- NEW OFFENSIVE MODULES -----
+
+newButton("สแกนปุ่ม", function() return "สแกนหา LocalScript ที่ฝังอยู่ในปุ่ม UI ของเกม (หา Teleport / Shop)" end, function()
+    local PlayerGui = game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")
+    if not PlayerGui then return TextLabel.Text = "ไม่พบ PlayerGui" end
+    
+    local found = {}
+    for _, v in pairs(PlayerGui:GetDescendants()) do
+        -- กรองหา LocalScript ที่ทำงานภายใต้ปุ่ม UI
+        if v:IsA("LocalScript") and v.Parent and (v.Parent:IsA("TextButton") or v.Parent:IsA("ImageButton") or v.Parent:IsA("GuiButton")) then
+            table.insert(found, v:GetFullName())
+        end
+    end
+    
+    if #found > 0 then
+        codebox:setRaw("-- 🔍 พบปุ่มที่มี LocalScript ซ่อนอยู่ (นำ Path ไปส่องใน Dex):\n\n" .. table.concat(found, "\n\n"))
+        TextLabel.Text = "สแกนสำเร็จ! พบ " .. #found .. " รายการ"
+    else
+        codebox:setRaw("-- ❌ ไม่พบ LocalScript ในปุ่ม UI ของเกมนี้")
+        TextLabel.Text = "สแกนสำเร็จ แต่ไม่พบข้อมูล"
+    end
+end)
+
+-- ตัวแปรสถานะสำหรับควบคุมลูปสแปม
+local spamLoop = nil
+
+newButton("รันอัตโนมัติ", function() return "กดเพื่อ เปิด/ปิด การยิง Remote อัตโนมัติ (สแปม)" end, function()
+    if spamLoop then
+        -- ถ้ารันอยู่ ให้ยกเลิก (Toggle Off)
+        task.cancel(spamLoop)
+        spamLoop = nil
+        TextLabel.Text = "🛑 หยุดรันอัตโนมัติแล้ว!"
+        return
+    end
+    
+    local Remote = selected and selected.Remote
+    if Remote then
+        local args = selected.args
+        local isEvent = Remote:IsA("RemoteEvent") or Remote:IsA("UnreliableRemoteEvent")
+        local isFunction = Remote:IsA("RemoteFunction")
+        
+        TextLabel.Text = "🚀 เริ่มรันอัตโนมัติ! (คลิกอีกครั้งเพื่อหยุด)"
+        
+        -- สร้าง Template ลูปส่งให้ CodeBox เพื่อให้ผู้ใช้นำไปก๊อปปี้ หรือปรับแก้ delay ได้
+        local scriptGen = "-- สคริปต์ Auto-Spam (นำไปรันเป็นบอทแยกได้)\nlocal delay = 0.1 -- ⏱️ ปรับความเร็วตรงนี้\nwhile task.wait(delay) do\n"
+        scriptGen = scriptGen .. "    " .. (selected.GenScript or "") .. "\nend"
+        codebox:setRaw(scriptGen)
+        
+        -- สั่งรันลูปจริงๆ ใน Background (Toggle On)
+        spamLoop = task.spawn(function()
+            while task.wait(0.1) do -- ความเร็วเริ่มต้นคือ 0.1 วินาที
+                pcall(function()
+                    if isEvent then
+                        Remote:FireServer(unpack(args))
+                    elseif isFunction then
+                        Remote:InvokeServer(unpack(args))
+                    end
+                end)
+            end
+        end)
+    else
+        TextLabel.Text = "❌ โปรดเลือก Remote จากฝั่งซ้ายก่อนรัน!"
     end
 end)
 
