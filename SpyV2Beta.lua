@@ -497,7 +497,7 @@ function connectResize()
     end)
 end
 
---- Brings gui back if it gets lost offscreen (connected to the camera viewport changing)
+--- Brings gui back if it gets lost offscreen [SNAPBACK DISABLED]
 function bringBackOnResize()
     validateSize()
     if sideClosed then
@@ -505,62 +505,34 @@ function bringBackOnResize()
     else
         maximizeSize()
     end
+    
+    -- ปล่อยให้ UI อยู่ในตำแหน่ง AbsolutePosition ปัจจุบัน โดยไม่บังคับดึงกลับเข้าขอบจอ
     local currentX = Background.AbsolutePosition.X
     local currentY = Background.AbsolutePosition.Y
-    local viewportSize = workspace.CurrentCamera.ViewportSize
-    if (currentX < 0) or (currentX > (viewportSize.X - (sideClosed and 131 or Background.AbsoluteSize.X))) then
-        if currentX < 0 then
-            currentX = 0
-        else
-            currentX = viewportSize.X - (sideClosed and 131 or Background.AbsoluteSize.X)
-        end
+    
+    TweenService:Create(Background, TweenInfo.new(0.1), {Position = UDim2.new(0, currentX, 0, currentY)}):Play()
     end
-    if (currentY < 0) or (currentY > (viewportSize.Y - (closed and 19 or Background.AbsoluteSize.Y) - GuiInset.Y)) then
-        if currentY < 0 then
-            currentY = 0
-        else
-            currentY = viewportSize.Y - (closed and 19 or Background.AbsoluteSize.Y) - GuiInset.Y
-        end
-    end
-    TweenService.Create(TweenService, Background, TweenInfo.new(0.1), {Position = UDim2.new(0, currentX, 0, currentY)}):Play()
-end
-
---- Drags gui (so long as mouse is held down)
---- @param input InputObject
+    
+--- Drags gui (so long as mouse is held down) [UNLOCKED BOUNDARIES]
 function onBarInput(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         local lastPos = UserInputService:GetMouseLocation()
         local mainPos = Background.AbsolutePosition
         local offset = mainPos - lastPos
         local currentPos = offset + lastPos
+        
         if not connections["drag"] then
             connections["drag"] = RunService.RenderStepped:Connect(function()
                 local newPos = UserInputService:GetMouseLocation()
                 if newPos ~= lastPos then
+                    -- คำนวณพิกัดใหม่อย่างอิสระ (ตัดโค้ดเช็ค ViewportSize ทิ้งทั้งหมด)
                     local currentX = (offset + newPos).X
                     local currentY = (offset + newPos).Y
-                    local viewportSize = workspace.CurrentCamera.ViewportSize
-                    if (currentX < 0 and currentX < currentPos.X) or (currentX > (viewportSize.X - (sideClosed and 131 or TopBar.AbsoluteSize.X)) and currentX > currentPos.X) then
-                        if currentX < 0 then
-                            currentX = 0
-                        else
-                            currentX = viewportSize.X - (sideClosed and 131 or TopBar.AbsoluteSize.X)
-                        end
-                    end
-                    if (currentY < 0 and currentY < currentPos.Y) or (currentY > (viewportSize.Y - (closed and 19 or Background.AbsoluteSize.Y) - GuiInset.Y) and currentY > currentPos.Y) then
-                        if currentY < 0 then
-                            currentY = 0
-                        else
-                            currentY = viewportSize.Y - (closed and 19 or Background.AbsoluteSize.Y) - GuiInset.Y
-                        end
-                    end
+                    
                     currentPos = Vector2.new(currentX, currentY)
                     lastPos = newPos
-                    TweenService.Create(TweenService, Background, TweenInfo.new(0.1), {Position = UDim2.new(0, currentPos.X, 0, currentPos.Y)}):Play()
+                    TweenService:Create(Background, TweenInfo.new(0.1), {Position = UDim2.new(0, currentPos.X, 0, currentPos.Y)}):Play()
                 end
-                    -- if input.UserInputState ~= Enum.UserInputState.Begin then
-                    --     RunService.UnbindFromRenderStep(RunService, "drag")
-                    -- end
             end)
         end
         table.insert(connections, UserInputService.InputEnded:Connect(function(inputE)
@@ -572,8 +544,8 @@ function onBarInput(input)
             end
         end))
     end
-end
-
+    end
+    
 --- Fades out the table of elements (and makes them invisible), returns a function to make them visible again
 function fadeOut(elements)
     local data = {}
