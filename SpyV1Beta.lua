@@ -252,14 +252,15 @@ local Storage = Create("Folder",{})
 local Background = Create("Frame",{Parent = SimpleSpy3,BackgroundColor3 = Theme.MainBG, BackgroundTransparency = 1, BorderSizePixel = 0,Position = UDim2.new(0, 500, 0, 200),Size = UDim2.new(0, 450, 0, 268)})
 
 -- 2. ย้ายเส้นขอบแดง (UIStroke) แยกใส่แต่ละชิ้นส่วน เพื่อให้มันย่อขยายตามกัน
-local LeftPanel = Create("Frame",{Parent = Background,BackgroundColor3 = Theme.PanelBG,BorderSizePixel = 0,Position = UDim2.new(0, 0, 0, 19),Size = UDim2.new(0, 131, 0, 249)})
+    -- เปิด ClipsDescendants เพื่อตัดขอบเวลาหน้าต่างหดตัว
+local LeftPanel = Create("Frame",{Parent = Background,BackgroundColor3 = Theme.PanelBG,BorderSizePixel = 0,Position = UDim2.new(0, 0, 0, 19),Size = UDim2.new(0, 131, 0, 249), ClipsDescendants = true})
 Create("UICorner", {CornerRadius = Theme.CornerRadius, Parent = LeftPanel})
 Create("UIStroke", {Color = Theme.Accent, Thickness = 1, Transparency = 0.5, Parent = LeftPanel})
 
 local LogList = Create("ScrollingFrame",{Parent = LeftPanel,Active = true,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,BorderSizePixel = 0,Position = UDim2.new(0, 0, 0, 9),Size = UDim2.new(0, 131, 0, 232),CanvasSize = UDim2.new(0, 0, 0, 0),ScrollBarThickness = 2, ScrollBarImageColor3 = Theme.Accent})
 local UIListLayout = Create("UIListLayout",{Parent = LogList,HorizontalAlignment = Enum.HorizontalAlignment.Center,SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 2)})
 
-local RightPanel = Create("Frame",{Parent = Background,BackgroundColor3 = Theme.PanelBG,BorderSizePixel = 0,Position = UDim2.new(0, 131, 0, 19),Size = UDim2.new(0, 319, 0, 249)})
+local RightPanel = Create("Frame",{Parent = Background,BackgroundColor3 = Theme.PanelBG,BorderSizePixel = 0,Position = UDim2.new(0, 131, 0, 19),Size = UDim2.new(0, 319, 0, 249), ClipsDescendants = true})
 Create("UICorner", {CornerRadius = Theme.CornerRadius, Parent = RightPanel})
 Create("UIStroke", {Color = Theme.Accent, Thickness = 1, Transparency = 0.5, Parent = RightPanel})
 
@@ -269,11 +270,12 @@ Create("UICorner", {CornerRadius = Theme.CornerRadius, Parent = CodeBox})
 local ScrollingFrame = Create("ScrollingFrame",{Parent = RightPanel,Active = true,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 0, 0.5, 0),Size = UDim2.new(1, 0, 0.5, -9),CanvasSize = UDim2.new(0, 0, 0, 0),ScrollBarThickness = 2, ScrollBarImageColor3 = Theme.Accent})
 local UIGridLayout = Create("UIGridLayout",{Parent = ScrollingFrame,HorizontalAlignment = Enum.HorizontalAlignment.Center,SortOrder = Enum.SortOrder.LayoutOrder,CellPadding = UDim2.new(0, 6, 0, 6),CellSize = UDim2.new(0, 94, 0, 27)})
 
-local TopBar = Create("Frame",{Parent = Background,BackgroundColor3 = Theme.TopBar,BorderSizePixel = 0,Size = UDim2.new(0, 450, 0, 19)})
+local TopBar = Create("Frame",{Parent = Background,BackgroundColor3 = Theme.TopBar,BorderSizePixel = 0,Size = UDim2.new(0, 450, 0, 19), ClipsDescendants = true})
 Create("UICorner", {CornerRadius = Theme.CornerRadius, Parent = TopBar})
 Create("UIStroke", {Color = Theme.Accent, Thickness = 1, Transparency = 0.5, Parent = TopBar})
 
-local Simple = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Color3.new(1, 1, 1),AutoButtonColor = false,BackgroundTransparency = 1,Position = UDim2.new(0, 10, 0, 0),Size = UDim2.new(0, 57, 0, 18),Font = Enum.Font.GothamBold,Text =  "FeemSpy ตัวดักจับเวอร์ชั่นอัปเกรด",TextColor3 = Theme.TextLight,TextSize = 12,TextXAlignment = Enum.TextXAlignment.Left})
+-- เปลี่ยนชื่อและขยายไซส์ความกว้างจาก 57 เป็น 250 เพื่อไม่ให้ข้อความภาษาไทยถูกตัด
+local Simple = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Color3.new(1, 1, 1),AutoButtonColor = false,BackgroundTransparency = 1,Position = UDim2.new(0, 10, 0, 0),Size = UDim2.new(0, 250, 0, 18),Font = Enum.Font.GothamBold,Text = "FilmSpy ตัวดักจับเวอร์ชั่นอัพเกรด",TextColor3 = Theme.TextLight,TextSize = 12,TextXAlignment = Enum.TextXAlignment.Left})
 local CloseButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Theme.TopBar,BackgroundTransparency = 1, BorderSizePixel = 0,Position = UDim2.new(1, -19, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
 local ImageLabel = Create("ImageLabel",{Parent = CloseButton,BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 5),Size = UDim2.new(0, 9, 0, 9),Image = "http://www.roblox.com/asset/?id=5597086202", ImageColor3 = Theme.TextDark})
 local MaximizeButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Theme.TopBar,BackgroundTransparency = 1, BorderSizePixel = 0,Position = UDim2.new(1, -38, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
@@ -579,51 +581,35 @@ function fadeOut(elements)
     local data = {}
     for _, v in next, elements do
         if typeof(v) == "Instance" and v:IsA("GuiObject") and v.Visible then
-            spawn(function()
-                data[v] = {
-                    BackgroundTransparency = v.BackgroundTransparency
-                }
-                TweenService:Create(v, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-                if v:IsA("TextBox") or v:IsA("TextButton") or v:IsA("TextLabel") then
-                    data[v].TextTransparency = v.TextTransparency
-                    TweenService:Create(v, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
-                elseif v:IsA("ImageButton") or v:IsA("ImageLabel") then
-                    data[v].ImageTransparency = v.ImageTransparency
-                    TweenService:Create(v, TweenInfo.new(0.5), {ImageTransparency = 1}):Play()
-                end
-                delay(0.5,function()
-                    v.Visible = false
-                    for i, x in next, data[v] do
-                        v[i] = x
-                    end
-                    data[v] = true
-                end)
-            end)
+            -- แบ็กอัปค่าความโปร่งใสเดิมเก็บไว้ ห้ามเขียนทับ
+            data[v] = {
+                BackgroundTransparency = v.BackgroundTransparency
+            }
+            TweenService:Create(v, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
+            if v:IsA("TextBox") or v:IsA("TextButton") or v:IsA("TextLabel") then
+                data[v].TextTransparency = v.TextTransparency
+                TweenService:Create(v, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+            elseif v:IsA("ImageButton") or v:IsA("ImageLabel") then
+                data[v].ImageTransparency = v.ImageTransparency
+                TweenService:Create(v, TweenInfo.new(0.3), {ImageTransparency = 1}):Play()
+            end
         end
     end
+    
     return function()
-        for i, _ in next, data do
-            spawn(function()
-                local properties = {
-                    BackgroundTransparency = i.BackgroundTransparency
-                }
-                i.BackgroundTransparency = 1
-                TweenService:Create(i, TweenInfo.new(0.5), {BackgroundTransparency = properties.BackgroundTransparency}):Play()
+        for i, props in next, data do
+            if typeof(props) == "table" then
+                -- เรียกคืนค่าเดิมกลับมาแบบ 100%
+                TweenService:Create(i, TweenInfo.new(0.3), {BackgroundTransparency = props.BackgroundTransparency}):Play()
                 if i:IsA("TextBox") or i:IsA("TextButton") or i:IsA("TextLabel") then
-                    properties.TextTransparency = i.TextTransparency
-                    i.TextTransparency = 1
-                    TweenService:Create(i, TweenInfo.new(0.5), {TextTransparency = properties.TextTransparency}):Play()
+                    TweenService:Create(i, TweenInfo.new(0.3), {TextTransparency = props.TextTransparency}):Play()
                 elseif i:IsA("ImageButton") or i:IsA("ImageLabel") then
-                    properties.ImageTransparency = i.ImageTransparency
-                    i.ImageTransparency = 1
-                    TweenService:Create(i, TweenInfo.new(0.5), {ImageTransparency = properties.ImageTransparency}):Play()
+                    TweenService:Create(i, TweenInfo.new(0.3), {ImageTransparency = props.ImageTransparency}):Play()
                 end
-                i.Visible = true
-            end)
+            end
         end
     end
-end
-
+    end
 --- Expands and minimizes the gui (closed is the toggle boolean)
 function toggleMinimize(override)
     if mainClosing and not override or maximized then
