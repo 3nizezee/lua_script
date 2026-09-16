@@ -242,24 +242,26 @@ local Theme = {
     ButtonHover = Color3.fromRGB(45, 45, 55),
     TextDark = Color3.fromRGB(180, 180, 190),
     TextLight = Color3.fromRGB(240, 240, 245),
-    CornerRadius = UDim.new(0, 6)
+    CornerRadius = UDim.new(0, 4) -- ลดความโค้งลงนิดนึงเพื่อให้รอยต่อแต่ละชิ้นเนียนขึ้น
 }
 
 local SimpleSpy3 = Create("ScreenGui",{ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling})
 local Storage = Create("Folder",{})
 
-local Background = Create("Frame",{Parent = SimpleSpy3,BackgroundColor3 = Theme.MainBG,BorderSizePixel = 0,Position = UDim2.new(0, 500, 0, 200),Size = UDim2.new(0, 450, 0, 268)})
-Create("UICorner", {CornerRadius = Theme.CornerRadius, Parent = Background})
-Create("UIStroke", {Color = Theme.Accent, Thickness = 1.5, Transparency = 0.4, Parent = Background})
+-- 1. ทำให้ Background โปร่งใส (แก้บัคเหลือพื้นหลังค้าง)
+local Background = Create("Frame",{Parent = SimpleSpy3,BackgroundColor3 = Theme.MainBG, BackgroundTransparency = 1, BorderSizePixel = 0,Position = UDim2.new(0, 500, 0, 200),Size = UDim2.new(0, 450, 0, 268)})
 
+-- 2. ย้ายเส้นขอบแดง (UIStroke) แยกใส่แต่ละชิ้นส่วน เพื่อให้มันย่อขยายตามกัน
 local LeftPanel = Create("Frame",{Parent = Background,BackgroundColor3 = Theme.PanelBG,BorderSizePixel = 0,Position = UDim2.new(0, 0, 0, 19),Size = UDim2.new(0, 131, 0, 249)})
 Create("UICorner", {CornerRadius = Theme.CornerRadius, Parent = LeftPanel})
+Create("UIStroke", {Color = Theme.Accent, Thickness = 1, Transparency = 0.5, Parent = LeftPanel})
 
 local LogList = Create("ScrollingFrame",{Parent = LeftPanel,Active = true,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,BorderSizePixel = 0,Position = UDim2.new(0, 0, 0, 9),Size = UDim2.new(0, 131, 0, 232),CanvasSize = UDim2.new(0, 0, 0, 0),ScrollBarThickness = 2, ScrollBarImageColor3 = Theme.Accent})
 local UIListLayout = Create("UIListLayout",{Parent = LogList,HorizontalAlignment = Enum.HorizontalAlignment.Center,SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 2)})
 
 local RightPanel = Create("Frame",{Parent = Background,BackgroundColor3 = Theme.PanelBG,BorderSizePixel = 0,Position = UDim2.new(0, 131, 0, 19),Size = UDim2.new(0, 319, 0, 249)})
 Create("UICorner", {CornerRadius = Theme.CornerRadius, Parent = RightPanel})
+Create("UIStroke", {Color = Theme.Accent, Thickness = 1, Transparency = 0.5, Parent = RightPanel})
 
 local CodeBox = Create("Frame",{Parent = RightPanel,BackgroundColor3 = Theme.CodeBG,BorderSizePixel = 0,Size = UDim2.new(0, 319, 0, 119)})
 Create("UICorner", {CornerRadius = Theme.CornerRadius, Parent = CodeBox})
@@ -269,14 +271,14 @@ local UIGridLayout = Create("UIGridLayout",{Parent = ScrollingFrame,HorizontalAl
 
 local TopBar = Create("Frame",{Parent = Background,BackgroundColor3 = Theme.TopBar,BorderSizePixel = 0,Size = UDim2.new(0, 450, 0, 19)})
 Create("UICorner", {CornerRadius = Theme.CornerRadius, Parent = TopBar})
-Create("Frame", {Parent = TopBar, BackgroundColor3 = Theme.TopBar, BorderSizePixel = 0, Position = UDim2.new(0,0,1,-6), Size = UDim2.new(1,0,0,6)}) 
+Create("UIStroke", {Color = Theme.Accent, Thickness = 1, Transparency = 0.5, Parent = TopBar})
 
-local Simple = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Color3.new(1, 1, 1),AutoButtonColor = false,BackgroundTransparency = 1,Position = UDim2.new(0, 10, 0, 0),Size = UDim2.new(0, 57, 0, 18),Font = Enum.Font.GothamBold,Text =  "FeemSpy ตัวดักจับ",TextColor3 = Theme.TextLight,TextSize = 12,TextXAlignment = Enum.TextXAlignment.Left})
-local CloseButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Theme.TopBar,BorderSizePixel = 0,Position = UDim2.new(1, -19, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
+local Simple = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Color3.new(1, 1, 1),AutoButtonColor = false,BackgroundTransparency = 1,Position = UDim2.new(0, 10, 0, 0),Size = UDim2.new(0, 57, 0, 18),Font = Enum.Font.GothamBold,Text =  "SimpleSpy",TextColor3 = Theme.TextLight,TextSize = 12,TextXAlignment = Enum.TextXAlignment.Left})
+local CloseButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Theme.TopBar,BackgroundTransparency = 1, BorderSizePixel = 0,Position = UDim2.new(1, -19, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
 local ImageLabel = Create("ImageLabel",{Parent = CloseButton,BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 5),Size = UDim2.new(0, 9, 0, 9),Image = "http://www.roblox.com/asset/?id=5597086202", ImageColor3 = Theme.TextDark})
-local MaximizeButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Theme.TopBar,BorderSizePixel = 0,Position = UDim2.new(1, -38, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
+local MaximizeButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Theme.TopBar,BackgroundTransparency = 1, BorderSizePixel = 0,Position = UDim2.new(1, -38, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
 local ImageLabel_2 = Create("ImageLabel",{Parent = MaximizeButton,BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 5),Size = UDim2.new(0, 9, 0, 9),Image = "http://www.roblox.com/asset/?id=5597108117", ImageColor3 = Theme.TextDark})
-local MinimizeButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Theme.TopBar,BorderSizePixel = 0,Position = UDim2.new(1, -57, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
+local MinimizeButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Theme.TopBar,BackgroundTransparency = 1, BorderSizePixel = 0,Position = UDim2.new(1, -57, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
 local ImageLabel_3 = Create("ImageLabel",{Parent = MinimizeButton,BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 5),Size = UDim2.new(0, 9, 0, 9),Image = "http://www.roblox.com/asset/?id=5597105827", ImageColor3 = Theme.TextDark})
 
 local ToolTip = Create("Frame",{Parent = SimpleSpy3,BackgroundColor3 = Theme.MainBG,BackgroundTransparency = 0.05,BorderSizePixel = 0,Size = UDim2.new(0, 200, 0, 50),ZIndex = 5,Visible = false})
