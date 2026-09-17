@@ -1,22 +1,30 @@
 --!strict
 -- SimpleSpy UI Refactor / Controller
--- Binds the new presentation layer to a LogStore through callbacks.
--- No remote interception or execution logic lives here.
+-- Presentation controller for LogStore. It contains no remote interception logic.
 
 local Controller = {}
 Controller.__index = Controller
 
 function Controller.new(builder, store)
-    local self = setmetatable({
+    return setmetatable({
         builder = builder,
         store = store,
         root = nil,
         disconnectStore = nil,
+        connections = {},
         logButtons = {},
         currentFilter = "",
         currentCode = "",
     }, Controller)
-    return self
+end
+
+function Controller:_disconnectAll()
+    for _, connection in ipairs(self.connections) do
+        if connection then
+            connection:Disconnect()
+        end
+    end
+    table.clear(self.connections)
 end
 
 function Controller:_matches(entry)
@@ -36,7 +44,7 @@ function Controller:_renderLogs()
         return
     end
 
-    local list = self.root.LogList
+    local list = self.root.Logs
     for _, child in ipairs(list:GetChildren()) do
         if child:IsA("GuiObject") then
             child:Destroy()
@@ -47,10 +55,13 @@ function Controller:_renderLogs()
 
     for _, entry in ipairs(self.store.entries) do
         if self:_matches(entry) then
-            local row = self.builder.createLog(list, entry, function()
+            local title = entry.name or "Unnamed Remote"
+            if entry.method and entry.method ~= "" then
+                title = string.format("%s  ·  %s", title, entry.method)
+            end
+
+            local row = self.builder.createLog(list, title, nil, function()
                 self.store:select(entry.id)
-            end, function()
-                self.store:togglePinned(entry.id)
             end)
             self.logButtons[entry.id] = row
         end
@@ -70,33 +81,34 @@ function Controller:setCode(text: string)
 end
 
 function Controller:mount(root)
+    self:unmount()
     self.root = root
 
     self.disconnectStore = self.store:onChanged(function()
         self:_renderLogs()
     end)
 
-    if root.SearchBox then
-        root.SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-            self:setFilter(root.SearchBox.Text)
-        end)
-    end
+    table.insert(self.connections, root.Search:GetPropertyChangedSignal("Text"):Connect(function()
+        self:setFilter(root.Search.Text)
+    end))
 
-    if root.ClearButton then
-        root.ClearButton.Activated:Connect(function()
-            self.store:clear(false)
-        end)
-    end
+    table.insert(self.connections, root.CodeText.FocusLost:Connect(function()
+        self.currentCode = root.CodeText.Text
+    end))
 
     self:_renderLogs()
+    self:setCode(self.currentCode)
     return self
 end
 
 function Controller:unmount()
+    self:_disconnectAll()
+
     if self.disconnectStore then
         self.disconnectStore()
         self.disconnectStore = nil
     end
+
     self.root = nil
     table.clear(self.logButtons)
 end
