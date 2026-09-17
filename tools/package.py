@@ -19,32 +19,41 @@ def embed_module(name: str, source: str) -> str:
     )
 
 
+def replace_legacy_dependencies(source: str, highlight: str, datatocode: str) -> str:
+    # Match the actual loader block by its two upstream URL literals rather
+    # than relying on the placeholder text. This avoids producing a partial
+    # package if the legacy loader changes shape later.
+    pattern = re.compile(
+        r"local Highlight = .*?"
+        r"local LazyFix = .*?"
+        r"\n\s*pcall\(function\(\).*?"
+        r"raw\.githubusercontent\.com/78n/SimpleSpy/main/Highlight\.lua.*?"
+        r"\nend\)\s*"
+        r"pcall\(function\(\).*?"
+        r"raw\.githubusercontent\.com/78n/Roblox/refs/heads/main/Lua/Libraries/DataToCode/DataToCode\.luau.*?"
+        r"\nend\)",
+        re.S,
+    )
+
+    match = pattern.search(source)
+    if not match:
+        raise SystemExit(
+            "Legacy external dependency loader block was not found; "
+            "refusing to produce a partial package."
+        )
+
+    replacement = embed_module("Highlight", highlight) + embed_module("LazyFix", datatocode)
+    return source[: match.start()] + replacement + source[match.end() :]
+
+
 def main():
     source = SOURCE.read_text(encoding="utf-8")
     highlight = HIGHLIGHT.read_text(encoding="utf-8")
     datatocode = DATATOCODE.read_text(encoding="utf-8")
     modern_ui = MODERN_UI.read_text(encoding="utf-8")
 
-    # Replace the two network dependency loaders in the legacy file.
-    dependency_pattern = re.compile(
-        r'local Highlight = \{ new = function\(\) return \{ setRaw = function\(\) end, getString = function\(\) return "" end \} end \}\n'
-        r'local LazyFix = \{ Convert = function\(a\) return tostring\(a\) end, ConvertKnown = function\(a,b\) return "game" end \}\n'
-        r'\npcall\(function\(\)\n.*?\nend\)\n\s*pcall\(function\(\)\n.*?\nend\)',
-        re.S,
-    )
+    source = replace_legacy_dependencies(source, highlight, datatocode)
 
-    if not dependency_pattern.search(source):
-        raise SystemExit("Dependency loader block was not found; refusing to produce a partial package.")
-
-    source = dependency_pattern.sub(
-        embed_module("Highlight", highlight) + embed_module("LazyFix", datatocode),
-        source,
-        count=1,
-    )
-
-    # Keep the legacy interception/addon system intact and append the rebuilt UI
-    # as the presentation layer. The appended layer disables the old GUI and
-    # reuses the legacy logs, serializer, blacklist/blocklist and config state.
     packaged = (
         "--!native\n"
         "-- SIMPLESPY SINGLE-FILE PACKAGE\n"
@@ -54,6 +63,14 @@ def main():
         + modern_ui
         + "\n-- ===== END MODERN SINGLE-FILE UI =====\n"
     )
+
+    # Fail closed if either external dependency URL survived the replacement.
+    for forbidden in (
+        "https://raw.githubusercontent.com/78n/SimpleSpy/main/Highlight.lua",
+        "https://raw.githubusercontent.com/78n/Roblox/refs/heads/main/Lua/Libraries/DataToCode/DataToCode.luau",
+    ):
+        if forbidden in packaged:
+            raise SystemExit(f"External dependency URL remains in package: {forbidden}")
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(packaged, encoding="utf-8", newline="\n")
