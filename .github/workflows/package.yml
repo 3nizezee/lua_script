@@ -1,0 +1,37 @@
+name: package-single-file
+
+on:
+  push:
+    branches:
+      - refactor/ui-v3
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build single-file release
+        run: python3 tools/package.py
+
+      - name: Validate package markers
+        run: |
+          test -s dist/SpyV2Beta.lua
+          grep -q "VENDORED DEPENDENCY: Highlight" dist/SpyV2Beta.lua
+          grep -q "VENDORED DEPENDENCY: LazyFix" dist/SpyV2Beta.lua
+          grep -q "MODERN SINGLE-FILE UI" dist/SpyV2Beta.lua
+          if grep -q "raw.githubusercontent.com/78n" dist/SpyV2Beta.lua; then
+            echo "External 78n dependency URL remains in package"
+            exit 1
+          fi
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimpleSpy-single-file
+          path: dist/SpyV2Beta.lua
