@@ -2,7 +2,6 @@
 -- SimpleSpy UI Refactor / Builder
 -- Presentation layer only; remote interception stays in the legacy core.
 
-local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Theme = require(script.Parent.Theme)
 local C, M, Motion = Theme.Colors, Theme.Metrics, Theme.Motion
@@ -25,6 +24,7 @@ local function stroke(parent, color, transparency)
 end
 
 function Builder.tween(object, properties, info)
+    local TweenService = game:GetService("TweenService")
     local tween = TweenService:Create(object, info or Motion.Normal, properties)
     tween:Play()
     return tween
@@ -68,30 +68,48 @@ function Builder.createAction(parent,text,callback)
     return button
 end
 
-function Builder.createLog(parent,titleText,accent,callback)
-    local button=make("TextButton",{AutoButtonColor=false,BackgroundColor3=C.Surface2,BorderSizePixel=0,Size=UDim2.new(1,0,0,40),Text=""},parent)
+function Builder.createLog(parent,titleText,accent,callback,pinCallback)
+    local row=make("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,0,0,40)},parent)
+    local button=make("TextButton",{AutoButtonColor=false,BackgroundColor3=C.Surface2,BorderSizePixel=0,Position=UDim2.fromOffset(0,0),Size=UDim2.new(1,-34,1,0),Text=""},row)
     corner(button,M.SmallRadius); stroke(button,C.Border,.55)
     make("Frame",{BackgroundColor3=accent or C.Accent,BorderSizePixel=0,Position=UDim2.fromOffset(7,9),Size=UDim2.fromOffset(3,22)},button)
     make("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(18,0),Size=UDim2.new(1,-24,1,0),Font=Enum.Font.GothamMedium,Text=titleText,TextColor3=C.Text,TextSize=11,TextTruncate=Enum.TextTruncate.AtEnd,TextXAlignment=Enum.TextXAlignment.Left},button)
+
+    local pin=make("TextButton",{AutoButtonColor=false,BackgroundColor3=C.Surface2,BorderSizePixel=0,Position=UDim2.new(1,-29,0,0),Size=UDim2.fromOffset(29,40),Font=Enum.Font.GothamBold,Text="★",TextColor3=C.TextDim,TextSize=14},row)
+    corner(pin,M.SmallRadius); stroke(pin,C.Border,.55)
+
     button.MouseEnter:Connect(function() Builder.tween(button,{BackgroundColor3=C.Surface3},Motion.Fast) end)
     button.MouseLeave:Connect(function() Builder.tween(button,{BackgroundColor3=C.Surface2},Motion.Fast) end)
+    pin.MouseEnter:Connect(function() Builder.tween(pin,{BackgroundColor3=C.Surface3},Motion.Fast) end)
+    pin.MouseLeave:Connect(function() Builder.tween(pin,{BackgroundColor3=C.Surface2},Motion.Fast) end)
     button.Activated:Connect(function() if callback then callback(button) end end)
-    return button
+    pin.Activated:Connect(function()
+        if pinCallback then
+            local pinned = pinCallback(pin)
+            pin.TextColor3 = pinned and C.Warning or C.TextDim
+        end
+    end)
+    return row, button, pin
 end
 
 function Builder.enableDrag(window,handle)
     local dragging=false; local dragStart; local startPos
-    handle.InputBegan:Connect(function(input)
+    local connections={}
+    table.insert(connections, handle.InputBegan:Connect(function(input)
         if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then dragging=true; dragStart=input.Position; startPos=window.Position end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
+    end))
+    table.insert(connections, UserInputService.InputChanged:Connect(function(input)
         if not dragging or (input.UserInputType~=Enum.UserInputType.MouseMovement and input.UserInputType~=Enum.UserInputType.Touch) then return end
         local d=input.Position-dragStart
-        Builder.tween(window,{Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+d.X,startPos.Y.Scale,startPos.Y.Offset+d.Y)},Motion.Fast)
-    end)
-    UserInputService.InputEnded:Connect(function(input)
+        window.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+d.X,startPos.Y.Scale,startPos.Y.Offset+d.Y)
+    end))
+    table.insert(connections, UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then dragging=false end
-    end)
+    end))
+    return function()
+        for _, connection in ipairs(connections) do connection:Disconnect() end
+        table.clear(connections)
+    end
 end
 
 return Builder
